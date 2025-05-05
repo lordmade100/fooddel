@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Customer Menu - My Two Minutes Food</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
   <script src="https://www.gstatic.com/firebasejs/9.1.2/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.1.2/firebase-database.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.1.2/firebase-auth.js"></script>
@@ -122,6 +123,24 @@
       <!-- Restaurant Cards will go here -->
     </div>
   </section>
+
+<!-- Floating Bottom Navigation Bar (Orange, Floating, Rounded) -->
+<div class="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-orange-500 text-white w-[90%] max-w-md mx-auto rounded-full shadow-lg flex justify-around items-center py-3 px-4 z-50 sm:hidden">
+  <a href="status.html" class="flex flex-col items-center text-sm hover:text-black transition">
+    <i class="fas fa-clipboard-list text-lg mb-1"></i> Status
+  </a>
+  <a href="#" class="flex flex-col items-center text-sm hover:text-black transition">
+    <i class="fas fa-shopping-cart text-lg mb-1"></i> Cart
+  </a>
+  <a href="profile.html" class="flex flex-col items-center text-sm hover:text-black transition">
+    <i class="fas fa-user text-lg mb-1"></i> Profile
+  </a>
+</div>
+
+
+
+
+
 
   <!-- Firebase Script -->
   <script type="module">
