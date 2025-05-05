@@ -32,6 +32,9 @@
         <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-dasharray="60" stroke-dashoffset="40" stroke-linecap="round"></circle>
       </svg>
     </div>
+
+    <!-- Notification Message -->
+    <div id="notification" class="hidden mt-4 p-3 text-center text-white rounded-lg"></div>
   </div>
 
   <!-- Firebase Script -->
@@ -57,6 +60,7 @@
     // Handle Login
     const loginForm = document.getElementById("loginForm");
     const loadingSpinner = document.getElementById("loadingSpinner");
+    const notification = document.getElementById("notification");
 
     loginForm.addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -69,13 +73,26 @@
       try {
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
-        alert("Login Successful");
-        window.location.href = "index.html";  // Redirect to homepage after successful login
-      } catch (error) {
-        alert(error.message);
-      } finally {
+        
         // Hide the loading spinner
         loadingSpinner.classList.add("hidden");
+
+        // Display success notification
+        notification.classList.remove("hidden");
+        notification.classList.add("bg-green-500");
+        notification.innerHTML = "Login Successful! Redirecting...";
+        
+        setTimeout(() => {
+          window.location.href = "index.html";  // Redirect to homepage after successful login
+        }, 2000);
+      } catch (error) {
+        // Hide the loading spinner
+        loadingSpinner.classList.add("hidden");
+
+        // Display error notification
+        notification.classList.remove("hidden");
+        notification.classList.add("bg-red-500");
+        notification.innerHTML = `Error: ${error.message}`;
       }
     });
   </script>
