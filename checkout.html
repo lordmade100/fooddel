@@ -58,10 +58,26 @@
               <option value="cash_on_delivery">Cash on Delivery</option>
             </select>
           </div>
-          <button type="submit" class="w-full bg-green-500 hover:bg-green-600 text-white py-3 rounded-lg mt-6 text-lg">Place Order</button>
+          <button type="submit" id="submitOrder" class="w-full bg-green-500 hover:bg-green-600 text-white py-3 rounded-lg mt-6 text-lg">Place Order</button>
         </form>
       </div>
     </div>
+
+    <!-- Spinner for Processing -->
+    <div id="spinner" class="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center hidden">
+      <div class="spinner-border animate-spin inline-block w-12 h-12 border-4 border-solid border-orange-500 rounded-full"></div>
+    </div>
+    
+    <!-- Toast Message for Success -->
+    <div id="toastMessage" class="fixed bottom-4 left-4 p-4 bg-green-500 text-white rounded-lg shadow-lg hidden">
+      <p id="toastText">Your order has been placed successfully!</p>
+    </div>
+    
+    <!-- Toast Message for Error -->
+    <div id="errorToastMessage" class="fixed bottom-4 left-4 p-4 bg-red-500 text-white rounded-lg shadow-lg hidden">
+      <p id="errorToastText">There was an error placing your order. Please try again.</p>
+    </div>
+
   </div>
 
   <script type="module">
@@ -99,6 +115,10 @@
     const discountText = document.getElementById('discountText');
     const deliveryForm = document.getElementById('deliveryForm');
     const addressInput = document.getElementById('address');
+    const spinner = document.getElementById('spinner');
+    const toastMessage = document.getElementById('toastMessage');
+    const errorToastMessage = document.getElementById('errorToastMessage');
+    const submitOrderBtn = document.getElementById('submitOrder');
     let discount = 0;
 
     const MAPBOX_ACCESS_TOKEN = 'pk.eyJ1Ijoia2F0bGVnb3BoYXNoYSIsImEiOiJjbTlpOTdzbmYwMGNsMmpzYWJtZzN4d3pqIn0.Zt-aSMEoahrV3zkiVVHbOw';
@@ -124,7 +144,7 @@
         const itemEl = document.createElement('div');
         itemEl.className = 'bg-gray-50 p-4 rounded border';
         const itemTotal = c.item.price * c.quantity;
-        itemEl.innerHTML = `
+        itemEl.innerHTML = ` 
           <div class="flex justify-between">
             <span class="font-semibold text-lg">${c.item.name}</span>
             <span class="text-orange-600 font-semibold">R${itemTotal.toFixed(2)}</span>
@@ -166,31 +186,10 @@
         });
     }
 
-    applyPromoBtn.addEventListener('click', () => {
-      const code = promoCodeInput.value.trim().toUpperCase();
-      let subtotal = cart.reduce((sum, c) => sum + c.item.price * c.quantity, 0);
-      let total = subtotal + DELIVERY_FEE;
-
-      if (validPromoCodes[code]) {
-        promoMessage.classList.remove('hidden');
-        discountAmount.classList.remove('hidden');
-
-        if (typeof validPromoCodes[code] === 'string' && validPromoCodes[code].endsWith('%')) {
-          const percent = parseFloat(validPromoCodes[code]) / 100;
-          discount = subtotal * percent;
-        } else {
-          discount = validPromoCodes[code];
-        }
-
-        discountText.textContent = `R${discount.toFixed(2)}`;
-        totalAmountEl.textContent = `R${(total - discount).toFixed(2)}`;
-      } else {
-        alert('Invalid promo code');
-      }
-    });
-
-    deliveryForm.addEventListener('submit', async e => {
+    submitOrderBtn.addEventListener('click', async e => {
       e.preventDefault();
+      spinner.classList.remove('hidden'); // Show spinner
+
       const name = document.getElementById('name').value;
       const address = document.getElementById('address').value;
       const phone = document.getElementById('phone').value;
@@ -217,11 +216,22 @@
       const restaurantOrderRef = ref(db, `restaurants/${restaurantId}/orders`);
       const globalOrderRef = ref(db, `orders`);
 
-      await push(restaurantOrderRef, order);
-      await push(globalOrderRef, order);
-
-      alert('Your order has been placed successfully!');
-      window.location.href = 'status.html';
+      try {
+        await push(restaurantOrderRef, order);
+        await push(globalOrderRef, order);
+        
+        // Display Success Toast Message
+        toastMessage.classList.remove('hidden');
+        
+        // Redirect to status page after 3 seconds
+        setTimeout(() => {
+          window.location.href = 'status.html';
+        }, 3000);
+      } catch (error) {
+        // Hide spinner and show error toast
+        spinner.classList.add('hidden');
+        errorToastMessage.classList.remove('hidden');
+      }
     });
   </script>
 </body>
