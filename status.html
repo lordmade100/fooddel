@@ -2,135 +2,100 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Order Status - My Two Minutes Food</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://api.mapbox.com/mapbox-gl-js/v2.5.1/mapbox-gl.js"></script>
-  <link href="https://api.mapbox.com/mapbox-gl-js/v2.5.1/mapbox-gl.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
-<body class="bg-gray-100 font-sans">
+<body class="bg-gray-100 min-h-screen flex items-center justify-center px-4">
+  <div class="bg-white shadow-xl rounded-lg p-6 max-w-md w-full">
+    <h1 class="text-2xl font-bold text-center text-red-600 mb-4">🍽️ Order Status</h1>
 
-  <div class="max-w-4xl mx-auto bg-white p-8 rounded-lg shadow-lg mt-6">
-    <h1 class="text-3xl font-bold mb-6 text-orange-600">Order Status</h1>
-
-    <div id="orderDetails" class="space-y-6">
-      <!-- Order Summary Section -->
-      <div class="bg-gray-50 p-4 rounded border">
-        <h2 class="text-xl font-semibold mb-4">Order Summary</h2>
-        <div id="orderItems" class="space-y-4"></div>
-        <div class="flex justify-between text-lg font-semibold mt-2">
-          <span>Total:</span>
-          <span id="orderTotal">R0.00</span>
-        </div>
-      </div>
-
-      <!-- Order Status Section -->
-      <div class="bg-gray-50 p-4 rounded border mt-6">
-        <h2 class="text-xl font-semibold mb-4">Current Status</h2>
-        <div id="orderStatus" class="text-lg font-semibold text-orange-600">Loading...</div>
-      </div>
-      
-      <!-- Map Section -->
-      <div id="orderMap" class="mt-6">
-        <div class="w-full h-64" id="map"></div>
-      </div>
-
-      <!-- Back to Home Button -->
-      <div class="mt-6 text-center">
-        <a href="index.html" class="bg-blue-500 text-white py-3 px-6 rounded-lg hover:bg-blue-600">Back to Home</a>
-      </div>
+    <div class="mb-4">
+      <p class="text-gray-700 font-semibold">Status:</p>
+      <p id="orderStatus" class="text-lg font-medium text-blue-600">Loading...</p>
     </div>
 
+    <div class="mb-4">
+      <p class="text-gray-700 font-semibold">Delivery Address:</p>
+      <p id="deliveryAddress" class="text-gray-800">Fetching address...</p>
+    </div>
+
+    <div>
+      <p class="text-gray-700 font-semibold mb-1">Items Ordered:</p>
+      <ul id="orderDetails" class="list-disc pl-6 text-gray-700">
+        <li>Loading items...</li>
+      </ul>
+    </div>
   </div>
 
+  <!-- Firebase Script -->
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.1.2/firebase-app.js";
-    import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/9.1.2/firebase-database.js";
-    import { getAuth } from "https://www.gstatic.com/firebasejs/9.1.2/firebase-auth.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-app.js";
+    import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-database.js";
 
     const firebaseConfig = {
-      apiKey: "AIzaSyAxBT0oESoL62oz_x_Z8cMtdENWZPx4tMI",
-      authDomain: "pinotp-d7ef5.firebaseapp.com",
-      databaseURL: "https://pinotp-d7ef5-default-rtdb.firebaseio.com",
-      projectId: "pinotp-d7ef5",
-      storageBucket: "pinotp-d7ef5.appspot.com",
-      messagingSenderId: "708458917827",
-      appId: "1:708458917827:web:8b8cc6de6176f936cf9776"
+      apiKey: "AIzaSyBRuNquDY2cmE1QIqNu_HHeEVzSB5MNbdA",
+      authDomain: "mytwominutesfood.firebaseapp.com",
+      databaseURL: "https://mytwominutesfood-default-rtdb.firebaseio.com",
+      projectId: "mytwominutesfood",
+      storageBucket: "mytwominutesfood.appspot.com",
+      messagingSenderId: "727595247139",
+      appId: "1:727595247139:web:3192d6bb931e1a60fd6a9a"
     };
 
     const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-    const auth = getAuth();
+    const database = getDatabase(app);
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const orderId = urlParams.get('orderId');
-    const orderDetailsContainer = document.getElementById('orderDetails');
-    const orderItemsContainer = document.getElementById('orderItems');
-    const orderTotalEl = document.getElementById('orderTotal');
-    const orderStatusEl = document.getElementById('orderStatus');
-    const orderMapContainer = document.getElementById('orderMap');
+    const params = new URLSearchParams(window.location.search);
+    const orderId = params.get("orderId");
 
-    const MAPBOX_ACCESS_TOKEN = 'pk.eyJ1Ijoia2F0bGVnb3BoYXNoYSIsImEiOiJjbTlpOTdzbmYwMGNsMmpzYWJtZzN4d3pqIn0.Zt-aSMEoahrV3zkiVVHbOw';
+    console.log("Fetched orderId from URL:", orderId);
 
-    async function fetchOrderDetails() {
-      const orderRef = ref(db, `orders/${orderId}`);
-      try {
-        const snapshot = await get(orderRef);
-        if (snapshot.exists()) {
-          const orderData = snapshot.val();
-
-          // Render Order Items
-          let total = 0;
-          orderItemsContainer.innerHTML = '';
-          orderData.cart.forEach(c => {
-            const itemEl = document.createElement('div');
-            itemEl.className = 'flex justify-between';
-            const itemTotal = c.item.price * c.quantity;
-            itemEl.innerHTML = ` 
-              <span class="font-semibold">${c.item.name}</span>
-              <span class="text-orange-600 font-semibold">R${itemTotal.toFixed(2)}</span>
-            `;
-            orderItemsContainer.appendChild(itemEl);
-            total += itemTotal;
-          });
-
-          orderTotalEl.textContent = `R${(total + orderData.deliveryFee - orderData.discount).toFixed(2)}`;
-
-          // Render Order Status
-          orderStatusEl.textContent = orderData.status;
-
-          // Render Map Location (If Available)
-          if (orderData.address) {
-            const geocodeUrl = `https://api.mapbox.com/geocoding/v5/mapbox.places/${orderData.address}.json?access_token=${MAPBOX_ACCESS_TOKEN}&limit=1`;
-            const response = await fetch(geocodeUrl);
-            const mapData = await response.json();
-            if (mapData.features && mapData.features.length > 0) {
-              const [longitude, latitude] = mapData.features[0].geometry.coordinates;
-
-              mapboxgl.accessToken = MAPBOX_ACCESS_TOKEN;
-              const map = new mapboxgl.Map({
-                container: 'map',
-                style: 'mapbox://styles/mapbox/streets-v11',
-                center: [longitude, latitude],
-                zoom: 14
-              });
-
-              new mapboxgl.Marker()
-                .setLngLat([longitude, latitude])
-                .addTo(map);
-            }
-          }
-        } else {
-          orderStatusEl.textContent = "Order not found.";
-        }
-      } catch (error) {
-        console.error("Error fetching order data:", error);
-        orderStatusEl.textContent = "There was an error fetching your order details.";
-      }
+    if (!orderId) {
+      document.getElementById("orderStatus").innerText = "⚠️ No order ID provided in the URL.";
+      return;
     }
 
-    fetchOrderDetails();
-  </script>
+    const orderRef = ref(database, `orders/${orderId}`);
 
+    get(orderRef)
+      .then((snapshot) => {
+        if (snapshot.exists()) {
+          const orderData = snapshot.val();
+          console.log("Fetched order data:", orderData);
+
+          const orderDetails = document.getElementById("orderDetails");
+          const orderStatus = document.getElementById("orderStatus");
+          const deliveryAddress = document.getElementById("deliveryAddress");
+
+          orderStatus.innerText = orderData.status || "Unknown status";
+          deliveryAddress.innerText = orderData.address || "Address not available";
+
+          orderDetails.innerHTML = "";
+
+          if (Array.isArray(orderData.cart)) {
+            orderData.cart.forEach((cartItem, index) => {
+              const name = cartItem.name || cartItem.item?.name || "Unnamed item";
+              const quantity = cartItem.quantity || 1;
+              const price = cartItem.price || cartItem.item?.price || 0;
+
+              const li = document.createElement("li");
+              li.innerText = `${index + 1}. ${name} × ${quantity} - $${(price * quantity).toFixed(2)}`;
+              orderDetails.appendChild(li);
+            });
+          } else {
+            orderDetails.innerHTML = "<li>🛒 Cart is empty or not found.</li>";
+          }
+
+        } else {
+          console.warn("Order not found in Firebase.");
+          document.getElementById("orderStatus").innerText = "❌ Order not found. Please check the order ID.";
+        }
+      })
+      .catch((error) => {
+        console.error("Error fetching order data:", error);
+        document.getElementById("orderStatus").innerText = "⚠️ Error fetching order data.";
+      });
+  </script>
 </body>
 </html>
