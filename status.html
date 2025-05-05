@@ -1,101 +1,113 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Order Status - My Two Minutes Food</title>
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Status</title>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 min-h-screen flex items-center justify-center px-4">
-  <div class="bg-white shadow-xl rounded-lg p-6 max-w-md w-full">
-    <h1 class="text-2xl font-bold text-center text-red-600 mb-4">🍽️ Order Status</h1>
+<body class="bg-gray-100">
 
-    <div class="mb-4">
-      <p class="text-gray-700 font-semibold">Status:</p>
-      <p id="orderStatus" class="text-lg font-medium text-blue-600">Loading...</p>
+    <div class="container mx-auto p-6">
+        <div class="bg-white p-6 rounded-lg shadow-lg">
+            <h1 class="text-2xl font-bold text-center">Order Status</h1>
+            <hr class="mt-4 mb-6">
+
+            <div class="mt-8 bg-gray-100 p-6 rounded-lg shadow">
+                <h2 class="text-xl font-bold">Order Summary</h2>
+                <p><strong>Order ID:</strong> <span id="orderId"></span></p>
+                <p><strong>Total:</strong> R<span id="orderTotal"></span></p>
+                <p><strong>Payment Method:</strong> <span id="orderPaymentMethod"></span></p>
+                <p><strong>Address:</strong> <span id="orderAddress"></span></p>
+                <p><strong>Phone:</strong> <span id="orderPhone"></span></p>
+                <p><strong>Special Instructions:</strong> <span id="orderInstructions"></span></p>
+
+                <h3 class="mt-6 font-semibold">Items:</h3>
+                <ul id="orderItems" class="list-disc pl-5 mt-2">
+                    <!-- Order items will be dynamically added here -->
+                </ul>
+            </div>
+
+            <div class="mt-8 bg-white p-6 rounded-lg shadow">
+                <h2 class="text-xl font-bold">Current Status</h2>
+                <p id="orderStatus" class="mt-4 text-lg">Loading...</p>
+            </div>
+
+            <div class="mt-8 text-center">
+                <button id="contactDriverBtn" class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-lg hidden">Contact Driver</button>
+            </div>
+        </div>
     </div>
 
-    <div class="mb-4">
-      <p class="text-gray-700 font-semibold">Delivery Address:</p>
-      <p id="deliveryAddress" class="text-gray-800">Fetching address...</p>
-    </div>
+    <script src="https://www.gstatic.com/firebasejs/9.9.3/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.9.3/firebase-database.js"></script>
 
-    <div>
-      <p class="text-gray-700 font-semibold mb-1">Items Ordered:</p>
-      <ul id="orderDetails" class="list-disc pl-6 text-gray-700">
-        <li>Loading items...</li>
-      </ul>
-    </div>
-  </div>
+    <script>
+        // Firebase configuration
+       const firebaseConfig = {
+  apiKey: "AIzaSyAxBT0oESoL62oz_x_Z8cMtdENWZPx4tMI",
+  authDomain: "pinotp-d7ef5.firebaseapp.com",
+  databaseURL: "https://pinotp-d7ef5-default-rtdb.firebaseio.com",
+  projectId: "pinotp-d7ef5",
+  storageBucket: "pinotp-d7ef5.firebasestorage.app",
+  messagingSenderId: "708458917827",
+  appId: "1:708458917827:web:8b8cc6de6176f936cf9776"
+};
 
-  <!-- Firebase Script -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-app.js";
-    import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-database.js";
+        // Initialize Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+        const db = firebase.database(app);
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyBRuNquDY2cmE1QIqNu_HHeEVzSB5MNbdA",
-      authDomain: "mytwominutesfood.firebaseapp.com",
-      databaseURL: "https://mytwominutesfood-default-rtdb.firebaseio.com",
-      projectId: "mytwominutesfood",
-      storageBucket: "mytwominutesfood.appspot.com",
-      messagingSenderId: "727595247139",
-      appId: "1:727595247139:web:3192d6bb931e1a60fd6a9a"
-    };
+        const orderId = getOrderIdFromUrl();  // Function to get orderId from URL
+        const orderRef = db.ref(`orders/${orderId}`);
 
-    const app = initializeApp(firebaseConfig);
-    const database = getDatabase(app);
+        const orderIdElement = document.getElementById('orderId');
+        const orderTotalElement = document.getElementById('orderTotal');
+        const orderPaymentMethodElement = document.getElementById('orderPaymentMethod');
+        const orderItemsElement = document.getElementById('orderItems');
+        const orderStatusElement = document.getElementById('orderStatus');
+        const orderAddressElement = document.getElementById('orderAddress');
+        const orderPhoneElement = document.getElementById('orderPhone');
+        const orderInstructionsElement = document.getElementById('orderInstructions');
+        const contactDriverBtn = document.getElementById('contactDriverBtn');
 
-    const params = new URLSearchParams(window.location.search);
-    const orderId = params.get("orderId");
+        // Fetch order data from Firebase
+        orderRef.on('value', (snapshot) => {
+            const order = snapshot.val();
+            if (order) {
+                // Populate order details
+                orderIdElement.textContent = orderId;
+                orderTotalElement.textContent = order.total;
+                orderPaymentMethodElement.textContent = order.paymentMethod;
+                orderAddressElement.textContent = order.address;
+                orderPhoneElement.textContent = order.phone;
+                orderInstructionsElement.textContent = order.instructions || "No special instructions.";
 
-    console.log("Fetched orderId from URL:", orderId);
+                // Display items
+                orderItemsElement.innerHTML = '';
+                order.cart.forEach(item => {
+                    const listItem = document.createElement('li');
+                    listItem.textContent = `${item.name} x${item.quantity} - R${(item.price * item.quantity).toFixed(2)}`;
+                    orderItemsElement.appendChild(listItem);
+                });
 
-    if (!orderId) {
-      document.getElementById("orderStatus").innerText = "⚠️ No order ID provided in the URL.";
-      return;
-    }
+                // Display order status
+                orderStatusElement.textContent = `Status: ${order.status}`;
 
-    const orderRef = ref(database, `orders/${orderId}`);
+                // Show contact driver button if order is out for delivery
+                if (order.status === 'Out for Delivery') {
+                    contactDriverBtn.classList.remove('hidden');
+                }
+            } else {
+                orderStatusElement.textContent = 'Order not found.';
+            }
+        });
 
-    get(orderRef)
-      .then((snapshot) => {
-        if (snapshot.exists()) {
-          const orderData = snapshot.val();
-          console.log("Fetched order data:", orderData);
-
-          const orderDetails = document.getElementById("orderDetails");
-          const orderStatus = document.getElementById("orderStatus");
-          const deliveryAddress = document.getElementById("deliveryAddress");
-
-          orderStatus.innerText = orderData.status || "Unknown status";
-          deliveryAddress.innerText = orderData.address || "Address not available";
-
-          orderDetails.innerHTML = "";
-
-          if (Array.isArray(orderData.cart)) {
-            orderData.cart.forEach((cartItem, index) => {
-              const name = cartItem.name || cartItem.item?.name || "Unnamed item";
-              const quantity = cartItem.quantity || 1;
-              const price = cartItem.price || cartItem.item?.price || 0;
-
-              const li = document.createElement("li");
-              li.innerText = `${index + 1}. ${name} × ${quantity} - $${(price * quantity).toFixed(2)}`;
-              orderDetails.appendChild(li);
-            });
-          } else {
-            orderDetails.innerHTML = "<li>🛒 Cart is empty or not found.</li>";
-          }
-
-        } else {
-          console.warn("Order not found in Firebase.");
-          document.getElementById("orderStatus").innerText = "❌ Order not found. Please check the order ID.";
+        // Function to get order ID from URL
+        function getOrderIdFromUrl() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('orderId');  // e.g., ?orderId=12345
         }
-      })
-      .catch((error) => {
-        console.error("Error fetching order data:", error);
-        document.getElementById("orderStatus").innerText = "⚠️ Error fetching order data.";
-      });
-  </script>
+    </script>
 </body>
 </html>
