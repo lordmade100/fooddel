@@ -3,38 +3,50 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Order Status</title>
+  <title>Order Status - My Two Minutes Food</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://api.mapbox.com/mapbox-gl-js/v2.5.1/mapbox-gl.js"></script>
+  <link href="https://api.mapbox.com/mapbox-gl-js/v2.5.1/mapbox-gl.css" rel="stylesheet" />
 </head>
-<body class="bg-gray-100 p-6 font-sans">
-  <div class="max-w-2xl mx-auto bg-white p-6 rounded-lg shadow-lg">
+<body class="bg-gray-100 font-sans">
+
+  <div class="max-w-4xl mx-auto bg-white p-8 rounded-lg shadow-lg mt-6">
     <h1 class="text-3xl font-bold mb-6 text-orange-600">Order Status</h1>
 
-    <div id="orderDetails" class="mb-6 text-gray-700"></div>
-
-    <div>
-      <h2 class="text-xl font-semibold mb-4">Current Progress:</h2>
-      <div class="flex justify-between items-center mb-2 text-sm font-medium text-gray-600">
-        <span>Pending</span>
-        <span>Confirmed</span>
-        <span>Preparing</span>
-        <span>Out for Delivery</span>
-        <span>Delivered</span>
+    <div id="orderDetails" class="space-y-6">
+      <!-- Order Summary Section -->
+      <div class="bg-gray-50 p-4 rounded border">
+        <h2 class="text-xl font-semibold mb-4">Order Summary</h2>
+        <div id="orderItems" class="space-y-4"></div>
+        <div class="flex justify-between text-lg font-semibold mt-2">
+          <span>Total:</span>
+          <span id="orderTotal">R0.00</span>
+        </div>
       </div>
-      <div class="relative w-full h-2 bg-gray-300 rounded">
-        <div id="progressBar" class="absolute h-2 bg-orange-500 rounded transition-all duration-500 ease-in-out" style="width: 0%"></div>
+
+      <!-- Order Status Section -->
+      <div class="bg-gray-50 p-4 rounded border mt-6">
+        <h2 class="text-xl font-semibold mb-4">Current Status</h2>
+        <div id="orderStatus" class="text-lg font-semibold text-orange-600">Loading...</div>
+      </div>
+      
+      <!-- Map Section -->
+      <div id="orderMap" class="mt-6">
+        <div class="w-full h-64" id="map"></div>
+      </div>
+
+      <!-- Back to Home Button -->
+      <div class="mt-6 text-center">
+        <a href="index.html" class="bg-blue-500 text-white py-3 px-6 rounded-lg hover:bg-blue-600">Back to Home</a>
       </div>
     </div>
 
-    <div class="mt-6">
-      <h2 class="text-xl font-semibold mb-2">Current Status:</h2>
-      <div id="orderStatus" class="text-lg font-bold text-blue-600">Loading...</div>
-    </div>
   </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.1.2/firebase-app.js";
-    import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/9.1.2/firebase-database.js";
+    import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/9.1.2/firebase-database.js";
+    import { getAuth } from "https://www.gstatic.com/firebasejs/9.1.2/firebase-auth.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAxBT0oESoL62oz_x_Z8cMtdENWZPx4tMI",
@@ -48,57 +60,77 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
+    const auth = getAuth();
 
     const urlParams = new URLSearchParams(window.location.search);
     const orderId = urlParams.get('orderId');
-
+    const orderDetailsContainer = document.getElementById('orderDetails');
+    const orderItemsContainer = document.getElementById('orderItems');
+    const orderTotalEl = document.getElementById('orderTotal');
     const orderStatusEl = document.getElementById('orderStatus');
-    const orderDetailsEl = document.getElementById('orderDetails');
-    const progressBar = document.getElementById('progressBar');
+    const orderMapContainer = document.getElementById('orderMap');
 
-    const orderRef = ref(db, `orders/${orderId}`);
+    const MAPBOX_ACCESS_TOKEN = 'pk.eyJ1Ijoia2F0bGVnb3BoYXNoYSIsImEiOiJjbTlpOTdzbmYwMGNsMmpzYWJtZzN4d3pqIn0.Zt-aSMEoahrV3zkiVVHbOw';
 
-    const statusStages = [
-      "pending",
-      "confirmed",
-      "preparing",
-      "out_for_delivery",
-      "delivered"
-    ];
+    async function fetchOrderDetails() {
+      const orderRef = ref(db, `orders/${orderId}`);
+      try {
+        const snapshot = await get(orderRef);
+        if (snapshot.exists()) {
+          const orderData = snapshot.val();
 
-    function updateProgress(status) {
-      const index = statusStages.indexOf(status);
-      const percentage = (index / (statusStages.length - 1)) * 100;
-      progressBar.style.width = `${percentage}%`;
+          // Render Order Items
+          let total = 0;
+          orderItemsContainer.innerHTML = '';
+          orderData.cart.forEach(c => {
+            const itemEl = document.createElement('div');
+            itemEl.className = 'flex justify-between';
+            const itemTotal = c.item.price * c.quantity;
+            itemEl.innerHTML = ` 
+              <span class="font-semibold">${c.item.name}</span>
+              <span class="text-orange-600 font-semibold">R${itemTotal.toFixed(2)}</span>
+            `;
+            orderItemsContainer.appendChild(itemEl);
+            total += itemTotal;
+          });
+
+          orderTotalEl.textContent = `R${(total + orderData.deliveryFee - orderData.discount).toFixed(2)}`;
+
+          // Render Order Status
+          orderStatusEl.textContent = orderData.status;
+
+          // Render Map Location (If Available)
+          if (orderData.address) {
+            const geocodeUrl = `https://api.mapbox.com/geocoding/v5/mapbox.places/${orderData.address}.json?access_token=${MAPBOX_ACCESS_TOKEN}&limit=1`;
+            const response = await fetch(geocodeUrl);
+            const mapData = await response.json();
+            if (mapData.features && mapData.features.length > 0) {
+              const [longitude, latitude] = mapData.features[0].geometry.coordinates;
+
+              mapboxgl.accessToken = MAPBOX_ACCESS_TOKEN;
+              const map = new mapboxgl.Map({
+                container: 'map',
+                style: 'mapbox://styles/mapbox/streets-v11',
+                center: [longitude, latitude],
+                zoom: 14
+              });
+
+              new mapboxgl.Marker()
+                .setLngLat([longitude, latitude])
+                .addTo(map);
+            }
+          }
+        } else {
+          orderStatusEl.textContent = "Order not found.";
+        }
+      } catch (error) {
+        console.error("Error fetching order data:", error);
+        orderStatusEl.textContent = "There was an error fetching your order details.";
+      }
     }
 
-    // Listen for changes to the order's status in Firebase
-    onValue(orderRef, (snapshot) => {
-      const order = snapshot.val();
-      if (!order) {
-        orderStatusEl.textContent = "Order not found!";
-        return;
-      }
-
-      // Show order details
-      orderDetailsEl.innerHTML = `
-        <div><strong>Name:</strong> ${order.name}</div>
-        <div><strong>Address:</strong> ${order.address}</div>
-        <div><strong>Phone:</strong> ${order.phone}</div>
-        <div class="mt-4"><strong>Items:</strong></div>
-        <ul class="list-disc ml-6">
-          ${order.cart.map(c => `<li>${c.item.name} (x${c.quantity})</li>`).join('')}
-        </ul>
-        <div class="mt-2"><strong>Total:</strong> R${order.total.toFixed(2)}</div>
-      `;
-
-      // Show and update status
-      const status = order.status || "pending";
-      orderStatusEl.textContent = status.replace(/_/g, ' ').replace(/^\w/, c => c.toUpperCase());
-
-      // Update visual progress
-      updateProgress(status);
-    });
+    fetchOrderDetails();
   </script>
+
 </body>
 </html>
