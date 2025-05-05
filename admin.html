@@ -4,306 +4,209 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Admin Panel - My Two Minutes Food</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-database-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCJPULSOuCJPEPZAE6He_q83UhvTiM8ACU",
+      authDomain: "neufela-app.firebaseapp.com",
+      databaseURL: "https://neufela-app-default-rtdb.firebaseio.com",
+      projectId: "neufela-app",
+      storageBucket: "neufela-app.appspot.com",
+      messagingSenderId: "135159044376",
+      appId: "1:135159044376:web:6f68b1f5a0a7fc4e3bd8c2"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.database();
+    const { ref, set, push, get, update } = firebase.database;
+  </script>
+  <style>
+    body { font-family: sans-serif; margin: 20px; }
+    .section { margin-bottom: 40px; }
+    label { display: block; margin: 8px 0 4px; }
+    input, textarea, select { width: 100%; padding: 6px; margin-bottom: 12px; }
+    button { padding: 8px 16px; background-color: #0ea5e9; color: white; border: none; cursor: pointer; }
+    button:hover { background-color: #0284c7; }
+    ul { list-style: none; padding: 0; }
+    li { border: 1px solid #ddd; padding: 10px; margin-bottom: 10px; border-radius: 6px; }
+    .toast { background: #333; color: #fff; padding: 10px; position: fixed; top: 10px; right: 10px; z-index: 9999; border-radius: 5px; opacity: 0.95; }
+  </style>
 </head>
-<body class="bg-gray-100">
+<body>
+  <h1>🍔 Admin Panel - My Two Minutes Food</h1>
 
-  <!-- Header -->
-  <header class="bg-orange-500 text-white p-4 text-center">
-    <h1 class="text-2xl font-bold">Admin Panel - My Two Minutes Food</h1>
-  </header>
-
-  <!-- Toast -->
-  <div id="toast" class="fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded shadow hidden z-50"></div>
-
-  <!-- Login Section -->
-  <section id="loginSection" class="container mx-auto my-6 p-6 bg-white rounded shadow" style="display:none;">
-    <h2 class="text-xl font-bold mb-4">Admin Login</h2>
-    <form id="loginForm" class="space-y-4">
-      <input id="loginEmail" type="email" class="w-full p-3 border rounded" placeholder="Admin Email" required />
-      <input id="loginPassword" type="password" class="w-full p-3 border rounded" placeholder="Password" required />
-      <button type="submit" class="w-full bg-orange-500 text-white py-3 rounded">Login</button>
+  <div class="section" id="loginSection">
+    <h2>🔐 Admin Login</h2>
+    <form id="loginForm">
+      <label for="loginEmail">Email</label>
+      <input type="email" id="loginEmail" aria-label="Login email" required />
+      <label for="loginPassword">Password</label>
+      <input type="password" id="loginPassword" aria-label="Login password" required />
+      <button type="submit">Login</button>
     </form>
-  </section>
+  </div>
 
-  <!-- Restaurant Registration -->
-  <section id="restaurantSection" class="container mx-auto my-6 p-6 bg-white rounded shadow" style="display:none;">
-    <h2 class="text-xl font-bold mb-4">Register Your Restaurant</h2>
-    <form id="registerRestaurantForm" class="space-y-4">
-      <input id="restaurantName" class="w-full p-3 border rounded" placeholder="Restaurant Name" required />
-      <input id="restaurantImage" class="w-full p-3 border rounded" placeholder="Image URL" required />
-      <textarea id="restaurantDescription" class="w-full p-3 border rounded" placeholder="Description" required></textarea>
-      <input id="restaurantLocation" class="w-full p-3 border rounded" placeholder="Location" required />
-      <button class="w-full bg-orange-500 text-white py-3 rounded">Register</button>
-    </form>
-  </section>
-
-  <!-- Dashboard Overview -->
-  <section id="dashboardSection" class="container mx-auto my-6 p-6 bg-white rounded shadow" style="display:none;">
-    <h2 class="text-xl font-bold mb-4">Dashboard Overview</h2>
-    <div class="grid grid-cols-2 gap-4 text-center">
-      <div class="bg-gray-100 p-4 rounded shadow">
-        <h3 class="text-lg font-semibold">Total Orders</h3>
-        <p id="totalOrders" class="text-2xl font-bold">0</p>
-      </div>
-      <div class="bg-gray-100 p-4 rounded shadow">
-        <h3 class="text-lg font-semibold">Revenue (R)</h3>
-        <p id="totalRevenue" class="text-2xl font-bold">0</p>
-      </div>
+  <div id="adminPanel" style="display:none;">
+    <div class="section">
+      <h2>🏪 Register Restaurant</h2>
+      <form id="registerRestaurantForm">
+        <label for="restaurantName">Name</label>
+        <input type="text" id="restaurantName" required />
+        <label for="restaurantType">Type (e.g., Vegan, BBQ)</label>
+        <input type="text" id="restaurantType" required />
+        <label for="restaurantImage">Image URL</label>
+        <input type="text" id="restaurantImage" required />
+        <label for="restaurantRating">Rating</label>
+        <input type="number" id="restaurantRating" min="1" max="5" step="0.1" required />
+        <label for="restaurantEta">ETA (e.g., 15-30 mins)</label>
+        <input type="text" id="restaurantEta" required />
+        <label for="restaurantLocation">Location (lat,lng)</label>
+        <input type="text" id="restaurantLocation" placeholder="12.34,56.78" required />
+        <button type="submit">Register</button>
+      </form>
     </div>
 
-    <!-- Display Pending and Shipped Orders -->
-    <div id="dashboardOrders" class="grid grid-cols-2 gap-4 mt-6">
-      <!-- Pending and Shipped Orders will be displayed here -->
+    <div class="section">
+      <h2>🍽️ Add Menu Item</h2>
+      <form id="addMenuItemForm">
+        <label for="menuTitle">Title</label>
+        <input type="text" id="menuTitle" required />
+        <label for="menuPrice">Price</label>
+        <input type="number" id="menuPrice" required />
+        <label for="menuCategory">Category</label>
+        <input type="text" id="menuCategory" required />
+        <label for="menuImage">Image URL</label>
+        <input type="text" id="menuImage" required />
+        <label for="menuDescription">Description</label>
+        <textarea id="menuDescription"></textarea>
+        <button type="submit">Add</button>
+      </form>
     </div>
 
-    <!-- Order Chart -->
-    <canvas id="orderChart" class="mt-6"></canvas>
-  </section>
-
-  <!-- Menu Management -->
-  <section id="menuSection" style="display:none;" class="container mx-auto my-6 p-6 bg-white rounded shadow">
-    <div id="restaurantInfo" class="mb-6"></div>
-
-    <h2 class="text-xl font-bold mb-4">Add Menu Item</h2>
-    <form id="addMenuForm" class="space-y-4">
-      <input id="itemName" class="w-full p-3 border rounded" placeholder="Dish Name" required />
-      <input id="itemPrice" type="number" class="w-full p-3 border rounded" placeholder="Price (R)" required />
-      <input id="itemCategory" class="w-full p-3 border rounded" placeholder="Category" required />
-      <input id="itemImage" class="w-full p-3 border rounded" placeholder="Image URL" required />
-      <textarea id="itemDescription" class="w-full p-3 border rounded" placeholder="Description" required></textarea>
-      <button class="w-full bg-orange-500 text-white py-3 rounded">Add Menu Item</button>
-    </form>
-
-    <!-- Search Bar -->
-    <input id="searchMenu" type="text" placeholder="Search menu..." class="w-full mt-6 p-3 border rounded" />
-
-    <!-- Menu Inventory -->
-    <div id="menuItemsList" class="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
-  </section>
-
-  <!-- Orders Management -->
-  <section id="ordersSection" style="display:none;" class="container mx-auto my-6 p-6 bg-white rounded shadow">
-    <div class="flex justify-between items-center mb-4">
-      <h2 class="text-xl font-bold">Orders</h2>
-      <select id="orderFilter" class="border p-2 rounded">
+    <div class="section">
+      <h2>📦 Orders</h2>
+      <label for="orderFilter">Filter by Status</label>
+      <select id="orderFilter" aria-label="Order status filter">
         <option value="all">All</option>
         <option value="pending">Pending</option>
         <option value="shipped">Shipped</option>
       </select>
+      <ul id="ordersList"></ul>
     </div>
-    <div id="ordersList" class="space-y-4"></div>
-  </section>
+  </div>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.1.2/firebase-app.js";
-    import {
-      getDatabase, ref, set, push, onValue, update, remove
-    } from "https://www.gstatic.com/firebasejs/9.1.2/firebase-database.js";
-    import {
-      getAuth, signInWithEmailAndPassword, onAuthStateChanged
-    } from "https://www.gstatic.com/firebasejs/9.1.2/firebase-auth.js";
+  <div id="toast" class="toast" style="display:none;"></div>
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyAxBT0oESoL62oz_x_Z8cMtdENWZPx4tMI",
-      authDomain: "pinotp-d7ef5.firebaseapp.com",
-      databaseURL: "https://pinotp-d7ef5-default-rtdb.firebaseio.com",
-      projectId: "pinotp-d7ef5",
-      storageBucket: "pinotp-d7ef5.appspot.com",
-      messagingSenderId: "708458917827",
-      appId: "1:708458917827:web:8b8cc6de6176f936cf9776"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-    const auth = getAuth();
-
+  <script>
     let currentUserId = null;
-    let orderChart = null;
 
-    const toast = (msg) => {
-      const el = document.getElementById("toast");
-      el.innerText = msg;
-      el.classList.remove("hidden");
-      setTimeout(() => el.classList.add("hidden"), 3000);
-    };
+    function toast(message) {
+      const t = document.getElementById("toast");
+      t.innerText = message;
+      t.style.display = "block";
+      setTimeout(() => (t.style.display = "none"), 3000);
+    }
 
-    const loginForm = document.getElementById("loginForm");
-    loginForm.addEventListener('submit', e => {
+    function isValidURL(str) {
+      try {
+        new URL(str);
+        return true;
+      } catch (_) {
+        return false;
+      }
+    }
+
+    document.getElementById("loginForm").addEventListener("submit", (e) => {
       e.preventDefault();
       const email = document.getElementById("loginEmail").value;
       const password = document.getElementById("loginPassword").value;
-      signInWithEmailAndPassword(auth, email, password).catch(err => alert(err.message));
-    });
-
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        currentUserId = user.uid;
-        document.getElementById("loginSection").style.display = "none";
-        document.getElementById("restaurantSection").style.display = "none";
-        loadRestaurant();
-      }
-    });
-
-    function loadRestaurant() {
-      const refPath = ref(db, `restaurants/${currentUserId}`);
-      onValue(refPath, snap => {
-        const data = snap.val();
-        if (data) {
-          document.getElementById("menuSection").style.display = "block";
-          document.getElementById("ordersSection").style.display = "block";
-          document.getElementById("dashboardSection").style.display = "block";
-          document.getElementById("restaurantInfo").innerHTML = `
-            <img src="${data.image}" class="w-full h-40 object-cover rounded mb-2" />
-            <h4 class="text-xl font-bold">${data.name}</h4>
-            <p>${data.description}</p>
-            <p><strong>Location:</strong> ${data.location}</p>
-            <p>Status: <span class="font-bold ${data.status === 'opened' ? 'text-green-500' : 'text-red-500'}">${data.status}</span></p>
-            <button class="bg-blue-500 text-white px-4 py-2 mt-2 rounded" onclick="toggleStatus()">Toggle Status</button>
-          `;
-          loadMenu();
+      auth.signInWithEmailAndPassword(email, password)
+        .then(user => {
+          currentUserId = user.user.uid;
+          document.getElementById("loginSection").style.display = "none";
+          document.getElementById("adminPanel").style.display = "block";
+          toast("Logged in");
           loadOrders();
-        } else {
-          document.getElementById("restaurantSection").style.display = "block";
-        }
-      });
-    }
+        })
+        .catch(err => toast(err.message));
+    });
 
-    window.toggleStatus = function () {
-      const refPath = ref(db, `restaurants/${currentUserId}`);
-      onValue(refPath, snap => {
-        const data = snap.val();
-        const newStatus = data.status === 'opened' ? 'closed' : 'opened';
-        update(refPath, { status: newStatus });
-      }, { onlyOnce: true });
-    };
-
-    document.getElementById("registerRestaurantForm")?.addEventListener('submit', e => {
+    document.getElementById("registerRestaurantForm").addEventListener("submit", e => {
       e.preventDefault();
       const name = document.getElementById("restaurantName").value;
+      const type = document.getElementById("restaurantType").value;
       const image = document.getElementById("restaurantImage").value;
-      const description = document.getElementById("restaurantDescription").value;
-      const location = document.getElementById("restaurantLocation").value;
-      set(ref(db, `restaurants/${currentUserId}`), {
-        name, image, description, location, status: 'opened'
-      }).then(() => loadRestaurant());
+      const rating = parseFloat(document.getElementById("restaurantRating").value);
+      const eta = document.getElementById("restaurantEta").value;
+      const locationStr = document.getElementById("restaurantLocation").value;
+      const [lat, lng] = locationStr.split(',').map(Number);
+
+      if (!isValidURL(image)) {
+        toast("Please enter a valid image URL.");
+        return;
+      }
+
+      set(ref(db, `restaurants/${currentUserId}/info`), {
+        name, type, image, rating, eta,
+        lat, lng, open: true
+      }).then(() => toast("Restaurant registered!"));
     });
 
-    document.getElementById("addMenuForm")?.addEventListener('submit', e => {
+    document.getElementById("addMenuItemForm").addEventListener("submit", e => {
       e.preventDefault();
-      const itemName = document.getElementById("itemName").value;
-      const itemPrice = parseFloat(document.getElementById("itemPrice").value);
-      const itemCategory = document.getElementById("itemCategory").value;
-      const itemImage = document.getElementById("itemImage").value;
-      const itemDescription = document.getElementById("itemDescription").value;
-      const refPath = ref(db, `restaurants/${currentUserId}/menu`);
-      push(refPath, {
-        name: itemName,
-        price: itemPrice,
-        category: itemCategory,
-        image: itemImage,
-        description: itemDescription
-      }).then(() => loadMenu());
+      const title = document.getElementById("menuTitle").value;
+      const price = parseFloat(document.getElementById("menuPrice").value);
+      const category = document.getElementById("menuCategory").value;
+      const image = document.getElementById("menuImage").value;
+      const description = document.getElementById("menuDescription").value;
+
+      if (!isValidURL(image)) {
+        toast("Please enter a valid image URL.");
+        return;
+      }
+
+      const id = push(ref(db, `restaurants/${currentUserId}/menu`)).key;
+      set(ref(db, `restaurants/${currentUserId}/menu/${id}`), {
+        title, price, category, image, description, available: true
+      }).then(() => toast("Menu item added"));
     });
-
-    document.getElementById("searchMenu").addEventListener('input', e => loadMenu());
-
-    function loadMenu() {
-      const searchQuery = document.getElementById("searchMenu").value.toLowerCase();
-      const refPath = ref(db, `restaurants/${currentUserId}/menu`);
-      onValue(refPath, snap => {
-        const data = snap.val();
-        const list = document.getElementById("menuItemsList");
-        list.innerHTML = '';
-        if (data) {
-          Object.entries(data).forEach(([id, item]) => {
-            if (item.name.toLowerCase().includes(searchQuery)) {
-              const div = document.createElement("div");
-              div.className = "bg-white shadow p-4 rounded";
-              div.innerHTML = `
-                <img src="${item.image}" class="w-full h-40 object-cover rounded mb-2" />
-                <h4 class="font-semibold">${item.name}</h4>
-                <p>${item.description}</p>
-                <p class="font-bold">R${item.price}</p>
-              `;
-              list.appendChild(div);
-            }
-          });
-        }
-      });
-    }
 
     function loadOrders() {
-      const refPath = ref(db, `restaurants/${currentUserId}/orders`);
-      onValue(refPath, snap => {
-        const data = snap.val();
+      const filter = document.getElementById("orderFilter").value;
+      get(ref(db, `restaurants/${currentUserId}/orders`)).then(snapshot => {
+        const orders = snapshot.val() || {};
         const list = document.getElementById("ordersList");
-        const dashboardOrders = document.getElementById("dashboardOrders");
-        list.innerHTML = '';
-        let total = 0, count = 0;
-        const filter = document.getElementById("orderFilter").value;
-        const chartData = { pending: 0, shipped: 0 };
-
-        if (data) {
-          Object.entries(data).forEach(([id, order]) => {
-            if (filter !== "all" && order.status !== filter) return;
-            count++;
-            total += order.totalPrice;
-            chartData[order.status]++;
-            const div = document.createElement("div");
-            div.className = "p-4 bg-white shadow rounded";
-            div.innerHTML = `
-              <h4 class="text-lg font-semibold">Order #${id}</h4>
-              <p><strong>Customer:</strong> ${order.customerName}</p>
-              <p><strong>Items:</strong> ${order.items.map(i => i.name).join(", ")}</p>
-              <p><strong>Total Price:</strong> R${order.totalPrice}</p>
-              <p><strong>Status:</strong> <span class="font-semibold ${order.status === 'pending' ? 'text-yellow-500' : 'text-green-500'}">${order.status}</span></p>
-              <button class="bg-blue-500 text-white px-2 py-1 mt-2 rounded" data-id="${id}">Mark as Shipped</button>
-            `;
-            list.appendChild(div);
-          });
-        }
-
-        document.getElementById("totalOrders").innerText = count;
-        document.getElementById("totalRevenue").innerText = total.toFixed(2);
-
-        // Display orders on dashboard
-        dashboardOrders.innerHTML = `
-          <div class="bg-white p-4 shadow rounded">
-            <h4 class="font-semibold">Pending Orders</h4>
-            <p class="text-xl">${chartData.pending}</p>
-          </div>
-          <div class="bg-white p-4 shadow rounded">
-            <h4 class="font-semibold">Shipped Orders</h4>
-            <p class="text-xl">${chartData.shipped}</p>
-          </div>
-        `;
-
-        if (orderChart) orderChart.destroy();
-        orderChart = new Chart(document.getElementById("orderChart").getContext("2d"), {
-          type: "doughnut",
-          data: {
-            labels: ["Pending", "Shipped"],
-            datasets: [{
-              data: [chartData.pending, chartData.shipped],
-              backgroundColor: ["#facc15", "#22c55e"]
-            }]
-          }
+        list.innerHTML = "";
+        Object.entries(orders).forEach(([id, order]) => {
+          if (filter !== "all" && order.status !== filter) return;
+          const li = document.createElement("li");
+          li.innerHTML = `
+            <strong>Order ID:</strong> ${id}<br>
+            <strong>Status:</strong> ${order.status}<br>
+            <strong>Items:</strong> ${Object.values(order.items).map(i => i.title + ' x' + i.quantity).join(", ")}<br>
+            <button data-id="${id}" aria-label="Mark order ${id} as shipped">Mark as Shipped</button>
+          `;
+          list.appendChild(li);
         });
       });
     }
 
-    window.toggleStatus = function () {
-      const refPath = ref(db, `restaurants/${currentUserId}`);
-      onValue(refPath, snap => {
-        const data = snap.val();
-        const newStatus = data.status === 'opened' ? 'closed' : 'opened';
-        update(refPath, { status: newStatus });
-      }, { onlyOnce: true });
-    };
-  </script>
+    document.getElementById("ordersList").addEventListener("click", (e) => {
+      if (e.target.tagName === "BUTTON" && e.target.dataset.id) {
+        const orderId = e.target.dataset.id;
+        const orderRef = ref(db, `restaurants/${currentUserId}/orders/${orderId}`);
+        update(orderRef, { status: "shipped" }).then(() => {
+          toast("Order marked as shipped");
+          loadOrders(); // refresh list
+        });
+      }
+    });
 
+    document.getElementById("orderFilter").addEventListener("change", () => {
+      loadOrders();
+    });
+  </script>
 </body>
 </html>
-
