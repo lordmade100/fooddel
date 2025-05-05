@@ -13,7 +13,7 @@
   <div class="max-w-4xl mx-auto bg-white p-8 rounded-lg shadow-lg mt-6">
     <h1 class="text-3xl font-bold mb-6 text-orange-600">Checkout</h1>
 
-    <div class="flex space-x-10">
+    <div class="flex flex-col lg:flex-row space-y-6 lg:space-y-0 lg:space-x-10">
       <!-- Order Summary Section -->
       <div class="flex-1">
         <h2 class="text-xl font-semibold mb-4">Order Summary</h2>
@@ -31,7 +31,7 @@
           <span>Discount:</span>
           <span id="discountText">R0.00</span>
         </div>
-        <div class="flex justify-between text-lg font-semibold mt-4">
+        <div class="flex justify-between text-xl font-bold mt-4">
           <span>Total:</span>
           <span id="totalAmount">R0.00</span>
         </div>
@@ -40,11 +40,11 @@
           <input type="text" id="promoCode" placeholder="Promo Code" class="w-2/3 p-3 border rounded-lg" />
           <button id="applyPromoBtn" class="ml-2 bg-orange-500 hover:bg-orange-600 text-white py-2 px-4 rounded-lg">Apply</button>
         </div>
-        <div id="promoMessage" class="text-green-500 mt-2 hidden">Promo code applied successfully!</div>
+        <div id="promoMessage" class="text-green-600 mt-2 hidden">Promo code applied successfully!</div>
       </div>
 
       <!-- Delivery & Payment Section -->
-      <div class="w-96">
+      <div class="w-full lg:w-96">
         <h2 class="text-xl font-semibold mb-4">Delivery Address</h2>
         <form id="deliveryForm" class="space-y-4">
           <input type="text" id="name" placeholder="Full Name" class="w-full p-3 border rounded-lg" required />
@@ -106,7 +106,7 @@
 
     const validPromoCodes = {
       'SAVE20': 20,
-      'OFF10': '10%' // Example of percentage
+      'OFF10': '10%'
     };
 
     onAuthStateChanged(auth, user => {
@@ -123,7 +123,6 @@
       cart.forEach(c => {
         const itemEl = document.createElement('div');
         itemEl.className = 'bg-gray-50 p-4 rounded border';
-
         const itemTotal = c.item.price * c.quantity;
         itemEl.innerHTML = `
           <div class="flex justify-between">
@@ -140,8 +139,7 @@
       });
 
       subtotalAmountEl.textContent = `R${total.toFixed(2)}`;
-      deliveryFeeEl.textContent = `R${DELIVERY_FEE.toFixed(2)}`;
-      totalAmountEl.textContent = `R${(total + DELIVERY_FEE).toFixed(2)}`;
+      totalAmountEl.textContent = `R${(total + DELIVERY_FEE - discount).toFixed(2)}`;
     }
 
     function getCurrentLocation() {
@@ -216,9 +214,11 @@
         status: 'pending'
       };
 
-      // Save order under the restaurant's specific userId
-      const orderRef = ref(db, `restaurants/${userId}/orders`);
-      await push(orderRef, order);
+      const restaurantOrderRef = ref(db, `restaurants/${restaurantId}/orders`);
+      const globalOrderRef = ref(db, `orders`);
+
+      await push(restaurantOrderRef, order);
+      await push(globalOrderRef, order);
 
       alert('Your order has been placed successfully!');
       window.location.href = 'status.html';
