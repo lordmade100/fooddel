@@ -24,6 +24,14 @@
       <button type="submit" class="w-full p-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600">Login</button>
     </form>
     <p class="mt-4 text-center text-gray-600">Don't have an account? <a href="signup.html" class="text-blue-500">Sign up here</a></p>
+
+    <!-- Loading Spinner -->
+    <div id="loadingSpinner" class="flex justify-center items-center hidden mt-4">
+      <svg class="w-12 h-12 animate-spin text-orange-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10" stroke="none" />
+        <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-dasharray="60" stroke-dashoffset="40" stroke-linecap="round"></circle>
+      </svg>
+    </div>
   </div>
 
   <!-- Firebase Script -->
@@ -48,10 +56,15 @@
 
     // Handle Login
     const loginForm = document.getElementById("loginForm");
+    const loadingSpinner = document.getElementById("loadingSpinner");
+
     loginForm.addEventListener("submit", async (e) => {
       e.preventDefault();
       const email = document.getElementById("email").value;
       const password = document.getElementById("password").value;
+
+      // Show the loading spinner
+      loadingSpinner.classList.remove("hidden");
 
       try {
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
@@ -60,6 +73,9 @@
         window.location.href = "index.html";  // Redirect to homepage after successful login
       } catch (error) {
         alert(error.message);
+      } finally {
+        // Hide the loading spinner
+        loadingSpinner.classList.add("hidden");
       }
     });
   </script>
