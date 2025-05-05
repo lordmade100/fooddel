@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Order Status</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-6 font-sans">
+  <div class="max-w-2xl mx-auto bg-white p-6 rounded-lg shadow-lg">
+    <h1 class="text-3xl font-bold mb-6 text-orange-600">Order Status</h1>
+
+    <div id="orderDetails" class="mb-6 text-gray-700"></div>
+
+    <div>
+      <h2 class="text-xl font-semibold mb-4">Current Progress:</h2>
+      <div class="flex justify-between items-center mb-2 text-sm font-medium text-gray-600">
+        <span>Pending</span>
+        <span>Confirmed</span>
+        <span>Preparing</span>
+        <span>Out for Delivery</span>
+        <span>Delivered</span>
+      </div>
+      <div class="relative w-full h-2 bg-gray-300 rounded">
+        <div id="progressBar" class="absolute h-2 bg-orange-500 rounded transition-all duration-500 ease-in-out" style="width: 0%"></div>
+      </div>
+    </div>
+
+    <div class="mt-6">
+      <h2 class="text-xl font-semibold mb-2">Current Status:</h2>
+      <div id="orderStatus" class="text-lg font-bold text-blue-600">Loading...</div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.1.2/firebase-app.js";
+    import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/9.1.2/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAxBT0oESoL62oz_x_Z8cMtdENWZPx4tMI",
+      authDomain: "pinotp-d7ef5.firebaseapp.com",
+      databaseURL: "https://pinotp-d7ef5-default-rtdb.firebaseio.com",
+      projectId: "pinotp-d7ef5",
+      storageBucket: "pinotp-d7ef5.appspot.com",
+      messagingSenderId: "708458917827",
+      appId: "1:708458917827:web:8b8cc6de6176f936cf9776"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const orderId = urlParams.get('orderId');
+
+    const orderStatusEl = document.getElementById('orderStatus');
+    const orderDetailsEl = document.getElementById('orderDetails');
+    const progressBar = document.getElementById('progressBar');
+
+    const orderRef = ref(db, `orders/${orderId}`);
+
+    const statusStages = [
+      "pending",
+      "confirmed",
+      "preparing",
+      "out_for_delivery",
+      "delivered"
+    ];
+
+    function updateProgress(status) {
+      const index = statusStages.indexOf(status);
+      const percentage = (index / (statusStages.length - 1)) * 100;
+      progressBar.style.width = `${percentage}%`;
+    }
+
+    // Listen for changes to the order's status in Firebase
+    onValue(orderRef, (snapshot) => {
+      const order = snapshot.val();
+      if (!order) {
+        orderStatusEl.textContent = "Order not found!";
+        return;
+      }
+
+      // Show order details
+      orderDetailsEl.innerHTML = `
+        <div><strong>Name:</strong> ${order.name}</div>
+        <div><strong>Address:</strong> ${order.address}</div>
+        <div><strong>Phone:</strong> ${order.phone}</div>
+        <div class="mt-4"><strong>Items:</strong></div>
+        <ul class="list-disc ml-6">
+          ${order.cart.map(c => `<li>${c.item.name} (x${c.quantity})</li>`).join('')}
+        </ul>
+        <div class="mt-2"><strong>Total:</strong> R${order.total.toFixed(2)}</div>
+      `;
+
+      // Show and update status
+      const status = order.status || "pending";
+      orderStatusEl.textContent = status.replace(/_/g, ' ').replace(/^\w/, c => c.toUpperCase());
+
+      // Update visual progress
+      updateProgress(status);
+    });
+  </script>
+</body>
+</html>

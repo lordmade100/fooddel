@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Panel - My Two Minutes Food</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-100">
+
+  <!-- Header -->
+  <header class="bg-orange-500 text-white p-4 text-center">
+    <h1 class="text-2xl font-bold">Admin Panel - My Two Minutes Food</h1>
+  </header>
+
+  <!-- Toast -->
+  <div id="toast" class="fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded shadow hidden z-50"></div>
+
+  <!-- Login Section -->
+  <section id="loginSection" class="container mx-auto my-6 p-6 bg-white rounded shadow" style="display:none;">
+    <h2 class="text-xl font-bold mb-4">Admin Login</h2>
+    <form id="loginForm" class="space-y-4">
+      <input id="loginEmail" type="email" class="w-full p-3 border rounded" placeholder="Admin Email" required />
+      <input id="loginPassword" type="password" class="w-full p-3 border rounded" placeholder="Password" required />
+      <button type="submit" class="w-full bg-orange-500 text-white py-3 rounded">Login</button>
+    </form>
+  </section>
+
+  <!-- Restaurant Registration -->
+  <section id="restaurantSection" class="container mx-auto my-6 p-6 bg-white rounded shadow" style="display:none;">
+    <h2 class="text-xl font-bold mb-4">Register Your Restaurant</h2>
+    <form id="registerRestaurantForm" class="space-y-4">
+      <input id="restaurantName" class="w-full p-3 border rounded" placeholder="Restaurant Name" required />
+      <input id="restaurantImage" class="w-full p-3 border rounded" placeholder="Image URL" required />
+      <textarea id="restaurantDescription" class="w-full p-3 border rounded" placeholder="Description" required></textarea>
+      <input id="restaurantLocation" class="w-full p-3 border rounded" placeholder="Location" required />
+      <button class="w-full bg-orange-500 text-white py-3 rounded">Register</button>
+    </form>
+  </section>
+
+  <!-- Dashboard Overview -->
+  <section id="dashboardSection" class="container mx-auto my-6 p-6 bg-white rounded shadow" style="display:none;">
+    <h2 class="text-xl font-bold mb-4">Dashboard Overview</h2>
+    <div class="grid grid-cols-2 gap-4 text-center">
+      <div class="bg-gray-100 p-4 rounded shadow">
+        <h3 class="text-lg font-semibold">Total Orders</h3>
+        <p id="totalOrders" class="text-2xl font-bold">0</p>
+      </div>
+      <div class="bg-gray-100 p-4 rounded shadow">
+        <h3 class="text-lg font-semibold">Revenue (R)</h3>
+        <p id="totalRevenue" class="text-2xl font-bold">0</p>
+      </div>
+    </div>
+
+    <!-- Display Pending and Shipped Orders -->
+    <div id="dashboardOrders" class="grid grid-cols-2 gap-4 mt-6">
+      <!-- Pending and Shipped Orders will be displayed here -->
+    </div>
+
+    <!-- Order Chart -->
+    <canvas id="orderChart" class="mt-6"></canvas>
+  </section>
+
+  <!-- Menu Management -->
+  <section id="menuSection" style="display:none;" class="container mx-auto my-6 p-6 bg-white rounded shadow">
+    <div id="restaurantInfo" class="mb-6"></div>
+
+    <h2 class="text-xl font-bold mb-4">Add Menu Item</h2>
+    <form id="addMenuForm" class="space-y-4">
+      <input id="itemName" class="w-full p-3 border rounded" placeholder="Dish Name" required />
+      <input id="itemPrice" type="number" class="w-full p-3 border rounded" placeholder="Price (R)" required />
+      <input id="itemCategory" class="w-full p-3 border rounded" placeholder="Category" required />
+      <input id="itemImage" class="w-full p-3 border rounded" placeholder="Image URL" required />
+      <textarea id="itemDescription" class="w-full p-3 border rounded" placeholder="Description" required></textarea>
+      <button class="w-full bg-orange-500 text-white py-3 rounded">Add Menu Item</button>
+    </form>
+
+    <!-- Search Bar -->
+    <input id="searchMenu" type="text" placeholder="Search menu..." class="w-full mt-6 p-3 border rounded" />
+
+    <!-- Menu Inventory -->
+    <div id="menuItemsList" class="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+  </section>
+
+  <!-- Orders Management -->
+  <section id="ordersSection" style="display:none;" class="container mx-auto my-6 p-6 bg-white rounded shadow">
+    <div class="flex justify-between items-center mb-4">
+      <h2 class="text-xl font-bold">Orders</h2>
+      <select id="orderFilter" class="border p-2 rounded">
+        <option value="all">All</option>
+        <option value="pending">Pending</option>
+        <option value="shipped">Shipped</option>
+      </select>
+    </div>
+    <div id="ordersList" class="space-y-4"></div>
+  </section>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.1.2/firebase-app.js";
+    import {
+      getDatabase, ref, set, push, onValue, update, remove
+    } from "https://www.gstatic.com/firebasejs/9.1.2/firebase-database.js";
+    import {
+      getAuth, signInWithEmailAndPassword, onAuthStateChanged
+    } from "https://www.gstatic.com/firebasejs/9.1.2/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAxBT0oESoL62oz_x_Z8cMtdENWZPx4tMI",
+      authDomain: "pinotp-d7ef5.firebaseapp.com",
+      databaseURL: "https://pinotp-d7ef5-default-rtdb.firebaseio.com",
+      projectId: "pinotp-d7ef5",
+      storageBucket: "pinotp-d7ef5.appspot.com",
+      messagingSenderId: "708458917827",
+      appId: "1:708458917827:web:8b8cc6de6176f936cf9776"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const auth = getAuth();
+
+    let currentUserId = null;
+    let orderChart = null;
+
+    const toast = (msg) => {
+      const el = document.getElementById("toast");
+      el.innerText = msg;
+      el.classList.remove("hidden");
+      setTimeout(() => el.classList.add("hidden"), 3000);
+    };
+
+    const loginForm = document.getElementById("loginForm");
+    loginForm.addEventListener('submit', e => {
+      e.preventDefault();
+      const email = document.getElementById("loginEmail").value;
+      const password = document.getElementById("loginPassword").value;
+      signInWithEmailAndPassword(auth, email, password).catch(err => alert(err.message));
+    });
+
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        currentUserId = user.uid;
+        document.getElementById("loginSection").style.display = "none";
+        document.getElementById("restaurantSection").style.display = "none";
+        loadRestaurant();
+      }
+    });
+
+    function loadRestaurant() {
+      const refPath = ref(db, `restaurants/${currentUserId}`);
+      onValue(refPath, snap => {
+        const data = snap.val();
+        if (data) {
+          document.getElementById("menuSection").style.display = "block";
+          document.getElementById("ordersSection").style.display = "block";
+          document.getElementById("dashboardSection").style.display = "block";
+          document.getElementById("restaurantInfo").innerHTML = `
+            <img src="${data.image}" class="w-full h-40 object-cover rounded mb-2" />
+            <h4 class="text-xl font-bold">${data.name}</h4>
+            <p>${data.description}</p>
+            <p><strong>Location:</strong> ${data.location}</p>
+            <p>Status: <span class="font-bold ${data.status === 'opened' ? 'text-green-500' : 'text-red-500'}">${data.status}</span></p>
+            <button class="bg-blue-500 text-white px-4 py-2 mt-2 rounded" onclick="toggleStatus()">Toggle Status</button>
+          `;
+          loadMenu();
+          loadOrders();
+        } else {
+          document.getElementById("restaurantSection").style.display = "block";
+        }
+      });
+    }
+
+    window.toggleStatus = function () {
+      const refPath = ref(db, `restaurants/${currentUserId}`);
+      onValue(refPath, snap => {
+        const data = snap.val();
+        const newStatus = data.status === 'opened' ? 'closed' : 'opened';
+        update(refPath, { status: newStatus });
+      }, { onlyOnce: true });
+    };
+
+    document.getElementById("registerRestaurantForm")?.addEventListener('submit', e => {
+      e.preventDefault();
+      const name = document.getElementById("restaurantName").value;
+      const image = document.getElementById("restaurantImage").value;
+      const description = document.getElementById("restaurantDescription").value;
+      const location = document.getElementById("restaurantLocation").value;
+      set(ref(db, `restaurants/${currentUserId}`), {
+        name, image, description, location, status: 'opened'
+      }).then(() => loadRestaurant());
+    });
+
+    document.getElementById("addMenuForm")?.addEventListener('submit', e => {
+      e.preventDefault();
+      const itemName = document.getElementById("itemName").value;
+      const itemPrice = parseFloat(document.getElementById("itemPrice").value);
+      const itemCategory = document.getElementById("itemCategory").value;
+      const itemImage = document.getElementById("itemImage").value;
+      const itemDescription = document.getElementById("itemDescription").value;
+      const refPath = ref(db, `restaurants/${currentUserId}/menu`);
+      push(refPath, {
+        name: itemName,
+        price: itemPrice,
+        category: itemCategory,
+        image: itemImage,
+        description: itemDescription
+      }).then(() => loadMenu());
+    });
+
+    document.getElementById("searchMenu").addEventListener('input', e => loadMenu());
+
+    function loadMenu() {
+      const searchQuery = document.getElementById("searchMenu").value.toLowerCase();
+      const refPath = ref(db, `restaurants/${currentUserId}/menu`);
+      onValue(refPath, snap => {
+        const data = snap.val();
+        const list = document.getElementById("menuItemsList");
+        list.innerHTML = '';
+        if (data) {
+          Object.entries(data).forEach(([id, item]) => {
+            if (item.name.toLowerCase().includes(searchQuery)) {
+              const div = document.createElement("div");
+              div.className = "bg-white shadow p-4 rounded";
+              div.innerHTML = `
+                <img src="${item.image}" class="w-full h-40 object-cover rounded mb-2" />
+                <h4 class="font-semibold">${item.name}</h4>
+                <p>${item.description}</p>
+                <p class="font-bold">R${item.price}</p>
+              `;
+              list.appendChild(div);
+            }
+          });
+        }
+      });
+    }
+
+    function loadOrders() {
+      const refPath = ref(db, `restaurants/${currentUserId}/orders`);
+      onValue(refPath, snap => {
+        const data = snap.val();
+        const list = document.getElementById("ordersList");
+        const dashboardOrders = document.getElementById("dashboardOrders");
+        list.innerHTML = '';
+        let total = 0, count = 0;
+        const filter = document.getElementById("orderFilter").value;
+        const chartData = { pending: 0, shipped: 0 };
+
+        if (data) {
+          Object.entries(data).forEach(([id, order]) => {
+            if (filter !== "all" && order.status !== filter) return;
+            count++;
+            total += order.totalPrice;
+            chartData[order.status]++;
+            const div = document.createElement("div");
+            div.className = "p-4 bg-white shadow rounded";
+            div.innerHTML = `
+              <h4 class="text-lg font-semibold">Order #${id}</h4>
+              <p><strong>Customer:</strong> ${order.customerName}</p>
+              <p><strong>Items:</strong> ${order.items.map(i => i.name).join(", ")}</p>
+              <p><strong>Total Price:</strong> R${order.totalPrice}</p>
+              <p><strong>Status:</strong> <span class="font-semibold ${order.status === 'pending' ? 'text-yellow-500' : 'text-green-500'}">${order.status}</span></p>
+              <button class="bg-blue-500 text-white px-2 py-1 mt-2 rounded" data-id="${id}">Mark as Shipped</button>
+            `;
+            list.appendChild(div);
+          });
+        }
+
+        document.getElementById("totalOrders").innerText = count;
+        document.getElementById("totalRevenue").innerText = total.toFixed(2);
+
+        // Display orders on dashboard
+        dashboardOrders.innerHTML = `
+          <div class="bg-white p-4 shadow rounded">
+            <h4 class="font-semibold">Pending Orders</h4>
+            <p class="text-xl">${chartData.pending}</p>
+          </div>
+          <div class="bg-white p-4 shadow rounded">
+            <h4 class="font-semibold">Shipped Orders</h4>
+            <p class="text-xl">${chartData.shipped}</p>
+          </div>
+        `;
+
+        if (orderChart) orderChart.destroy();
+        orderChart = new Chart(document.getElementById("orderChart").getContext("2d"), {
+          type: "doughnut",
+          data: {
+            labels: ["Pending", "Shipped"],
+            datasets: [{
+              data: [chartData.pending, chartData.shipped],
+              backgroundColor: ["#facc15", "#22c55e"]
+            }]
+          }
+        });
+      });
+    }
+
+    window.toggleStatus = function () {
+      const refPath = ref(db, `restaurants/${currentUserId}`);
+      onValue(refPath, snap => {
+        const data = snap.val();
+        const newStatus = data.status === 'opened' ? 'closed' : 'opened';
+        update(refPath, { status: newStatus });
+      }, { onlyOnce: true });
+    };
+  </script>
+
+</body>
+</html>
+
