@@ -8,6 +8,9 @@
   <script src="https://www.gstatic.com/firebasejs/9.1.2/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.1.2/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.1.2/firebase-database.js"></script>
+  <!-- Mapbox Script -->
+  <script src="https://api.mapbox.com/mapbox-gl-js/v2.10.0/mapbox-gl.js"></script>
+  <link href="https://api.mapbox.com/mapbox-gl-js/v2.10.0/mapbox-gl.css" rel="stylesheet" />
 </head>
 <body class="bg-orange-50 min-h-screen">
 
@@ -43,6 +46,13 @@
       <div class="mb-4">
         <label for="email" class="block text-gray-700 font-medium">Email</label>
         <input type="email" id="email" disabled
+               class="mt-2 w-full px-4 py-2 bg-gray-100 border border-gray-200 rounded-lg text-gray-500">
+      </div>
+
+      <!-- Current Location Address -->
+      <div class="mb-4">
+        <label for="location" class="block text-gray-700 font-medium">Current Location</label>
+        <input type="text" id="location" disabled
                class="mt-2 w-full px-4 py-2 bg-gray-100 border border-gray-200 rounded-lg text-gray-500">
       </div>
 
@@ -83,6 +93,7 @@
     const profilePic = document.getElementById('profilePic');
     const userNameInput = document.getElementById('userName');
     const emailInput = document.getElementById('email');
+    const locationInput = document.getElementById('location');
     const updateProfileBtn = document.getElementById('updateProfileBtn');
     const signOutBtn = document.getElementById('signOutBtn');
     const backBtn = document.getElementById('backBtn');
@@ -132,6 +143,28 @@
     backBtn.addEventListener('click', () => {
       window.location.href = "index.html";
     });
+
+    // Get user's current location and show address
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition((position) => {
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+
+        // Reverse Geocoding to get the address
+        fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${lon},${lat}.json?access_token=pk.eyJ1Ijoia2F0bGVnb3BoYXNoYSIsImEiOiJjbTlpOTdzbmYwMGNsMmpzYWJtZzN4d3pqIn0.Zt-aSMEoahrV3zkiVVHbOw`)
+          .then(response => response.json())
+          .then(data => {
+            const address = data.features[0]?.place_name || "Location not available";
+            locationInput.value = address;
+          })
+          .catch(error => {
+            console.error("Error fetching location:", error);
+            locationInput.value = "Unable to retrieve location.";
+          });
+      });
+    } else {
+      locationInput.value = "Geolocation not supported by browser.";
+    }
   </script>
 </body>
 </html>
