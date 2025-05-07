@@ -16,10 +16,10 @@
 
   <!-- Restaurant Info -->
   <div class="container mx-auto p-6">
-    <h1 id="restaurantName" class="text-4xl font-bold mb-4 text-center text-orange-600">Restaurant Name</h1>
-
-<h2 class="text-2xl font-bold text-gray-800">${restaurant.name}</h2>
-<p class="text-sm text-gray-500 mt-1">${restaurant.location}</p>
+   <div class="text-center mb-6">
+  <h1 id="restaurantName" class="text-4xl font-bold text-orange-600">Restaurant Name</h1>
+  <p id="restaurantLocation" class="text-gray-600 text-sm mt-1">Location</p>
+</div>
 
     
 
@@ -84,6 +84,7 @@
 
     const restaurantMenu = document.getElementById('restaurantMenu');
     const restaurantName = document.getElementById('restaurantName');
+    const restaurantLocation = document.getElementById('restaurantLocation');
     const categoriesContainer = document.getElementById('categories');
     const cartCount = document.getElementById('cartCount');
     const itemModal = document.getElementById('itemModal');
@@ -118,6 +119,7 @@
         if (!restaurant) return;
 
         restaurantName.textContent = restaurant.name;
+        document.getElementById('restaurantLocation').textContent = restaurant.location || 'Location not available';
         allMenuItems = Object.entries(restaurant.menu || {});
         renderCategories(allMenuItems);
         renderMenuItems(allMenuItems);
