@@ -186,15 +186,40 @@
     let allRestaurants = [];
     let cartItems = 0; // Initialize cart count
 
-    function createCategoryButtons() {
-      categories.forEach(category => {
-        const btn = document.createElement('button');
-        btn.textContent = category;
-        btn.className = "px-4 py-2 bg-gray-200 rounded-full text-sm text-gray-700 hover:bg-gray-300";
-        btn.addEventListener('click', () => filterRestaurants(category));
-        categoryList.appendChild(btn);
-      });
-    }
+   function createCategoryButtons() {
+  const categoryIcons = {
+    "All": "fa-utensils",
+    "Hot Deals": "fa-fire",
+    "Chicken": "fa-drumstick-bite",
+    "Pizza": "fa-pizza-slice",
+    "Sushi": "fa-fish",
+    "Burgers": "fa-hamburger",
+    "Asian": "fa-bowl-rice",
+    "Seafood": "fa-shrimp",
+    "African": "fa-pepper-hot",
+    "Health": "fa-leaf",
+    "Grilled": "fa-hotdog",
+    "Kotas": "fa-bread-slice"
+  };
+
+  categories.forEach(category => {
+    const btn = document.createElement('button');
+    btn.className = "flex items-center space-x-2 px-4 py-2 bg-gray-200 rounded-full text-sm text-gray-700 hover:bg-gray-300 transition";
+    
+    const icon = document.createElement('i');
+    icon.className = `fas ${categoryIcons[category] || 'fa-utensils'}`;
+
+    const span = document.createElement('span');
+    span.textContent = category;
+
+    btn.appendChild(icon);
+    btn.appendChild(span);
+
+    btn.addEventListener('click', () => filterRestaurants(category));
+    categoryList.appendChild(btn);
+  });
+}
+
 
     function renderRestaurants(data) {
       restaurantMenuList.innerHTML = '';
