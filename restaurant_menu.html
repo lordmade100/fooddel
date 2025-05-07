@@ -117,32 +117,36 @@
       });
     }
 
-    function renderCategories(menuItems) {
-      categoriesContainer.innerHTML = '';
+   function renderCategories(menuItems) {
+  categoriesContainer.innerHTML = '';
 
-      const categories = new Set(menuItems.map(([_, item]) => item.category));
-      const allBtn = document.createElement('button');
-      allBtn.className = 'px-6 py-3 bg-gray-200 rounded-lg text-lg font-semibold text-gray-700 hover:bg-gray-300';
-      allBtn.textContent = 'All';
-      allBtn.onclick = () => {
-        document.querySelectorAll('#categories button').forEach(btn => btn.classList.remove('bg-orange-500', 'text-white'));
-        allBtn.classList.add('bg-orange-500', 'text-white');
-        renderMenuItems(allMenuItems);
-      };
-      categoriesContainer.appendChild(allBtn);
+  const categories = new Set(menuItems.map(([_, item]) => item.category));
 
-      categories.forEach(category => {
-        const btn = document.createElement('button');
-        btn.className = 'px-6 py-3 bg-gray-200 rounded-lg text-lg font-semibold text-gray-700 hover:bg-gray-300';
-        btn.textContent = category;
-        btn.onclick = () => {
-          document.querySelectorAll('#categories button').forEach(b => b.classList.remove('bg-orange-500', 'text-white'));
-          btn.classList.add('bg-orange-500', 'text-white');
-          renderMenuItems(allMenuItems.filter(([_, item]) => item.category === category));
-        };
-        categoriesContainer.appendChild(btn);
-      });
-    }
+  // Create "All" button
+  const allBtn = document.createElement('button');
+  allBtn.className = 'px-6 py-3 bg-gray-200 rounded-full text-lg font-semibold text-gray-700 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-500 transition duration-300 ease-in-out';
+  allBtn.textContent = 'All';
+  allBtn.onclick = () => {
+    document.querySelectorAll('#categories button').forEach(btn => btn.classList.remove('bg-orange-500', 'text-white'));
+    allBtn.classList.add('bg-orange-500', 'text-white');
+    renderMenuItems(allMenuItems);
+  };
+  categoriesContainer.appendChild(allBtn);
+
+  // Create category buttons
+  categories.forEach(category => {
+    const btn = document.createElement('button');
+    btn.className = 'px-6 py-3 bg-gray-200 rounded-full text-lg font-semibold text-gray-700 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-500 transition duration-300 ease-in-out';
+    btn.textContent = category;
+    btn.onclick = () => {
+      document.querySelectorAll('#categories button').forEach(b => b.classList.remove('bg-orange-500', 'text-white'));
+      btn.classList.add('bg-orange-500', 'text-white');
+      renderMenuItems(allMenuItems.filter(([_, item]) => item.category === category));
+    };
+    categoriesContainer.appendChild(btn);
+  });
+}
+
 
     function renderMenuItems(items) {
       restaurantMenu.innerHTML = '';
