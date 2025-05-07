@@ -1,75 +1,71 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Restaurant Menu</title>
-  <script src="https://cdn.tailwindcss.com"></script> <!-- Tailwind CSS CDN -->
-  <link rel="stylesheet" href="styles.css">
-  <!-- Font Awesome CDN for icons -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
-
-
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
 </head>
 <body class="bg-gray-100 font-sans">
 
-  <!-- Restaurant Info -->
-  <div class="container mx-auto p-6">
-   <div class="text-center mb-6">
-  <h1 id="restaurantName" class="text-4xl font-bold text-orange-600">Restaurant Name</h1>
- <p id="restaurantLocation" class="flex items-center justify-center gap-1 text-center text-sm text-gray-500 mb-6">
-  <i class="fas fa-map-marker-alt text-gray-500"></i>
-  <span id="locationText">Restaurant Location</span>
-</p>
+  <!-- Container -->
+  <div class="max-w-screen-xl mx-auto p-4 sm:p-6">
 
-</div>
-
-    
+    <!-- Restaurant Header -->
+    <div class="text-center mb-6">
+      <h1 id="restaurantName" class="text-3xl sm:text-4xl font-bold text-orange-600">Restaurant Name</h1>
+      <p class="text-sm text-gray-500 flex items-center justify-center gap-2">
+        <i class="fas fa-map-marker-alt"></i>
+        <span id="locationText">Restaurant Location</span>
+      </p>
+    </div>
 
     <!-- Categories -->
-    <div id="categories" class="flex space-x-4 mb-6 justify-center"></div>
+    <div id="categories" class="flex flex-wrap gap-2 justify-center mb-6"></div>
 
-    <!-- Menu Items -->
-    <div id="restaurantMenu" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+    <!-- Menu Items Grid -->
+    <div id="restaurantMenu" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
 
-   <!-- Cart Button -->
-<button class="fixed bottom-6 right-6 bg-orange-500 text-white p-4 rounded-full shadow-xl text-xl flex items-center justify-center space-x-2" id="cartCount">
-  <i class="fas fa-shopping-cart"></i> <!-- Cart Icon -->
-  <span id="cartCountText">0</span> <!-- Cart Count -->
-</button>
+    <!-- Floating Cart Button -->
+    <button id="cartCount" class="fixed bottom-5 right-5 bg-orange-500 text-white px-4 py-3 rounded-full shadow-lg text-xl flex items-center space-x-2 z-40">
+      <i class="fas fa-shopping-cart"></i>
+      <span id="cartCountText">0</span>
+    </button>
 
     <!-- Cart Drawer -->
     <div id="cartDrawer" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
-      <div class="bg-white w-full sm:w-1/2 md:w-1/3 p-6 absolute top-0 right-0 h-full overflow-y-auto">
-        <button class="text-2xl text-gray-500 mb-4" id="closeCartBtn">&times;</button>
-        <h2 class="text-2xl font-bold mb-4">Your Cart</h2>
-        <div id="cartItems"></div>
-        <div class="flex justify-between items-center mt-4">
-          <span>Total: </span><span id="totalAmount">0.00</span>
+      <div class="bg-white w-full sm:w-3/4 md:w-1/2 lg:w-1/3 h-full fixed right-0 top-0 p-4 overflow-y-auto">
+        <button id="closeCartBtn" class="text-gray-500 text-2xl mb-4">&times;</button>
+        <h2 class="text-xl font-bold mb-4">Your Cart</h2>
+        <div id="cartItems" class="space-y-4"></div>
+        <div class="flex justify-between items-center mt-4 font-semibold">
+          <span>Total:</span>
+          <span id="totalAmount">0.00</span>
         </div>
-        <button class="mt-6 bg-green-500 text-white py-2 px-4 rounded-lg w-full" id="proceedBtn">Proceed to Payment</button>
-        <button class="mt-4 bg-red-500 text-white py-2 px-4 rounded-lg w-full" id="clearCartBtn">Clear Cart</button>
+        <button id="proceedBtn" class="mt-6 w-full bg-green-500 text-white py-2 rounded-lg">Proceed to Payment</button>
+        <button id="clearCartBtn" class="mt-3 w-full bg-red-500 text-white py-2 rounded-lg">Clear Cart</button>
       </div>
     </div>
 
     <!-- Item Modal -->
     <div id="itemModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
-      <div class="bg-white w-full sm:w-1/2 md:w-1/3 p-6 absolute top-0 left-0 right-0 bottom-0 mx-auto mt-16 rounded-lg shadow-xl">
-        <button class="text-2xl text-gray-500 mb-4" id="closeModalBtn">&times;</button>
-        <h3 id="itemName" class="text-2xl font-semibold mb-2 text-gray-800"></h3>
+      <div class="bg-white w-full sm:w-3/4 md:w-1/2 lg:w-1/3 max-h-full overflow-y-auto mx-auto mt-20 p-6 rounded-lg shadow-lg relative">
+        <button id="closeModalBtn" class="text-gray-500 text-2xl absolute top-3 right-3">&times;</button>
+        <h3 id="itemName" class="text-2xl font-semibold text-gray-800 mb-2"></h3>
         <p id="itemDescription" class="text-gray-600 mb-4"></p>
         <p id="itemPrice" class="text-orange-500 font-bold mb-4"></p>
-        <input id="quantity" type="number" class="border p-2 rounded-lg w-full mb-4" value="1" min="1">
-        <button id="addToCartBtn" class="bg-blue-500 text-white py-2 px-4 rounded-lg w-full">Add to Cart</button>
+        <input id="quantity" type="number" min="1" value="1" class="w-full border rounded-lg p-2 mb-4"/>
+        <button id="addToCartBtn" class="bg-blue-500 text-white py-2 w-full rounded-lg">Add to Cart</button>
       </div>
     </div>
+
   </div>
 
-  <!-- Firebase + Logic -->
+  <!-- Firebase & Script -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.1.2/firebase-app.js";
-    import { getDatabase, ref, set, get, child, onValue } from "https://www.gstatic.com/firebasejs/9.1.2/firebase-database.js";
+    import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/9.1.2/firebase-database.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.1.2/firebase-auth.js";
 
     const firebaseConfig = {
@@ -86,212 +82,104 @@
     const db = getDatabase(app);
     const auth = getAuth();
 
-    const restaurantMenu = document.getElementById('restaurantMenu');
     const restaurantName = document.getElementById('restaurantName');
-    const restaurantLocation = document.getElementById('restaurantLocation');
+    const restaurantLocation = document.getElementById('locationText');
+    const restaurantMenu = document.getElementById('restaurantMenu');
     const categoriesContainer = document.getElementById('categories');
-    const cartCount = document.getElementById('cartCount');
-    const itemModal = document.getElementById('itemModal');
-    const addToCartBtn = document.getElementById('addToCartBtn');
-    const closeModalBtn = document.getElementById('closeModalBtn');
-    const quantityInput = document.getElementById('quantity');
-    const cartDrawer = document.getElementById('cartDrawer');
-    const cartItemsContainer = document.getElementById('cartItems');
-    const closeCartBtn = document.getElementById('closeCartBtn');
-    const clearCartBtn = document.getElementById('clearCartBtn');
-    const totalAmountEl = document.getElementById('totalAmount');
-    const proceedBtn = document.getElementById('proceedBtn');
-
-    let userId = null;
-    let cart = [];
-    let allMenuItems = [];
 
     const urlParams = new URLSearchParams(window.location.search);
     const restaurantId = urlParams.get('restaurantId');
+    let allMenuItems = [];
 
-    onAuthStateChanged(auth, user => {
+    onAuthStateChanged(auth, (user) => {
       if (user) {
-        userId = user.uid;
-        loadCart();
+        loadRestaurantData();
       }
     });
 
-    function loadRestaurantMenu() {
+    function loadRestaurantData() {
       const restaurantRef = ref(db, `restaurants/${restaurantId}`);
       onValue(restaurantRef, (snapshot) => {
         const restaurant = snapshot.val();
         if (!restaurant) return;
-
         restaurantName.textContent = restaurant.name;
-        document.getElementById('restaurantLocation').textContent = restaurant.location || 'Location not available';
+        restaurantLocation.textContent = restaurant.location || 'No location';
         allMenuItems = Object.entries(restaurant.menu || {});
         renderCategories(allMenuItems);
         renderMenuItems(allMenuItems);
       });
     }
 
-  function renderCategories(menuItems) {
-  categoriesContainer.innerHTML = '';
+    function renderCategories(menuItems) {
+      categoriesContainer.innerHTML = '';
+      const categories = new Set(menuItems.map(([_, item]) => item.category));
 
-  const categories = new Set(menuItems.map(([_, item]) => item.category));
+      const createButton = (label, iconHTML, isAll = false) => {
+        const btn = document.createElement('button');
+        btn.className = 'px-4 py-2 rounded-full bg-gray-200 text-sm text-gray-700 hover:bg-orange-500 hover:text-white transition flex items-center space-x-2';
+        btn.innerHTML = iconHTML + label;
+        btn.onclick = () => {
+          document.querySelectorAll('#categories button').forEach(b => b.classList.remove('bg-orange-500', 'text-white'));
+          btn.classList.add('bg-orange-500', 'text-white');
+          renderMenuItems(isAll ? allMenuItems : allMenuItems.filter(([_, item]) => item.category === label));
+        };
+        categoriesContainer.appendChild(btn);
+      };
 
-  // Create "All" button
-  const allBtn = document.createElement('button');
-  allBtn.className = 'flex items-center px-6 py-3 bg-gray-200 rounded-full text-lg font-semibold text-gray-700 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-500 transition duration-300 ease-in-out';
-  allBtn.innerHTML = '<i class="fas fa-utensils mr-2"></i>All';  // Font Awesome icon for "All"
-  allBtn.onclick = () => {
-    document.querySelectorAll('#categories button').forEach(btn => btn.classList.remove('bg-orange-500', 'text-white'));
-    allBtn.classList.add('bg-orange-500', 'text-white');
-    renderMenuItems(allMenuItems);
-  };
-  categoriesContainer.appendChild(allBtn);
+      createButton('All', '<i class="fas fa-utensils"></i> ', true);
 
-  // Create category buttons
-  categories.forEach(category => {
-    const btn = document.createElement('button');
-    btn.className = 'flex items-center px-6 py-3 bg-gray-200 rounded-full text-lg font-semibold text-gray-700 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-500 transition duration-300 ease-in-out';
-    
-    // Example: Add specific icons for categories
-    let icon = '';
-    switch (category) {
-      case 'Pizza':
-        icon = '<i class="fas fa-pizza-slice mr-2"></i>';
-        break;
-      case 'Burgers':
-        icon = '<i class="fas fa-hamburger mr-2"></i>';
-        break;
-      case 'Sushi':
-        icon = '<i class="fas fa-fish mr-2"></i>';
-        break;
-      default:
-        icon = '<i class="fas fa-utensils mr-2"></i>'; // Default icon
+      categories.forEach(category => {
+        let icon = '<i class="fas fa-utensils"></i>';
+        if (category === 'Pizza') icon = '<i class="fas fa-pizza-slice"></i>';
+        else if (category === 'Burgers') icon = '<i class="fas fa-hamburger"></i>';
+        else if (category === 'Sushi') icon = '<i class="fas fa-fish"></i>';
+        createButton(category, icon + ' ');
+      });
     }
-    
-    btn.innerHTML = icon + category;
-    
-    btn.onclick = () => {
-      document.querySelectorAll('#categories button').forEach(b => b.classList.remove('bg-orange-500', 'text-white'));
-      btn.classList.add('bg-orange-500', 'text-white');
-      renderMenuItems(allMenuItems.filter(([_, item]) => item.category === category));
-    };
-    
-    categoriesContainer.appendChild(btn);
-  });
-}
-
-
 
     function renderMenuItems(items) {
       restaurantMenu.innerHTML = '';
-      items.forEach(([itemId, item]) => {
-        const el = document.createElement('div');
-        el.className = 'bg-white rounded-lg p-6 shadow-lg hover:shadow-xl transition duration-300';
-        el.innerHTML = `
-          <img src="${item.image}" alt="${item.name}" class="w-full h-48 object-cover rounded-lg mb-4">
-          <h3 class="text-xl font-semibold text-gray-800">${item.name}</h3>
-          <p class="text-gray-600">${item.description}</p>
-          <p class="text-orange-500 font-bold text-lg">R${item.price.toFixed(2)}</p>
-          <button class="mt-4 bg-orange-500 text-white py-2 px-4 rounded-lg w-full">View Details</button>
+      items.forEach(([id, item]) => {
+        const card = document.createElement('div');
+        card.className = 'bg-white rounded-lg shadow-md overflow-hidden flex flex-col';
+        card.innerHTML = `
+          <img src="${item.image}" class="w-full h-40 object-cover" alt="${item.name}">
+          <div class="p-4 flex-1 flex flex-col justify-between">
+            <div>
+              <h3 class="text-lg font-semibold text-gray-800">${item.name}</h3>
+              <p class="text-gray-600 text-sm mt-1">${item.description}</p>
+            </div>
+            <div>
+              <p class="text-orange-500 font-bold text-md mt-2">R${item.price.toFixed(2)}</p>
+              <button class="mt-3 w-full bg-orange-500 text-white py-2 rounded-md" onclick="openItemModal('${id}')">View Details</button>
+            </div>
+          </div>
         `;
-        el.querySelector('button').addEventListener('click', () => openItemModal(item));
-        restaurantMenu.appendChild(el);
+        restaurantMenu.appendChild(card);
       });
     }
 
-    function openItemModal(item) {
+    // Placeholder functions
+    window.openItemModal = (itemId) => {
+      const item = allMenuItems.find(([id]) => id === itemId)?.[1];
+      if (!item) return;
       document.getElementById('itemName').textContent = item.name;
       document.getElementById('itemDescription').textContent = item.description;
-      document.getElementById('itemPrice').textContent = `R${item.price.toFixed(2)}`;
-      itemModal.classList.remove('hidden');
-      addToCartBtn.onclick = () => addToCart(item);
-    }
+      document.getElementById('itemPrice').textContent = 'R' + item.price.toFixed(2);
+      document.getElementById('itemModal').classList.remove('hidden');
+    };
 
-    function closeModal() {
-      itemModal.classList.add('hidden');
-    }
+    document.getElementById('closeModalBtn').onclick = () => {
+      document.getElementById('itemModal').classList.add('hidden');
+    };
 
-    closeModalBtn.addEventListener('click', closeModal);
+    document.getElementById('closeCartBtn').onclick = () => {
+      document.getElementById('cartDrawer').classList.add('hidden');
+    };
 
-    function addToCart(item) {
-      const quantity = parseInt(quantityInput.value);
-      const existing = cart.find(c => c.item.name === item.name);
-
-      // Add the restaurantId to the cart item
-      const cartItem = {
-        item,
-        quantity,
-        restaurantId: restaurantId // Auto-filled restaurantId
-      };
-
-      if (existing) {
-        existing.quantity += quantity;
-      } else {
-        cart.push(cartItem);
-      }
-
-      saveCart();
-      updateCartCount();
-      closeModal();
-    }
-
-    function saveCart() {
-      localStorage.setItem(`cart-${userId}`, JSON.stringify(cart));
-    }
-
-    function loadCart() {
-      const storedCart = JSON.parse(localStorage.getItem(`cart-${userId}`));
-      if (storedCart) {
-        cart = storedCart;
-        updateCartCount();
-      }
-    }
-
-    function updateCartCount() {
-      const count = cart.reduce((total, c) => total + c.quantity, 0);
-      cartCount.textContent = count;
-    }
-
-    function renderCartItems() {
-      cartItemsContainer.innerHTML = '';
-      let totalAmount = 0;
-      cart.forEach(c => {
-        const el = document.createElement('div');
-        el.className = 'mb-4';
-        el.innerHTML = `
-          <h4 class="text-lg font-semibold">${c.item.name} (x${c.quantity})</h4>
-          <p class="text-orange-500 font-bold">R${(c.item.price * c.quantity).toFixed(2)}</p>
-        `;
-        totalAmount += c.item.price * c.quantity;
-        cartItemsContainer.appendChild(el);
-      });
-      totalAmountEl.textContent = totalAmount.toFixed(2);
-    }
-
-    // Show Cart
-    cartCount.addEventListener('click', () => {
-      cartDrawer.classList.remove('hidden');
-      renderCartItems(); // Render cart when the drawer opens
-    });
-
-    // Close Cart
-    closeCartBtn.addEventListener('click', () => {
-      cartDrawer.classList.add('hidden');
-    });
-
-    // Clear Cart
-    clearCartBtn.addEventListener('click', () => {
-      cart = [];
-      saveCart();
-      renderCartItems(); // Re-render cart after clearing
-      updateCartCount();
-    });
-
-    // Proceed to Payment
-    proceedBtn.addEventListener('click', () => {
-      window.location.href = `checkout.html?restaurantId=${restaurantId}&cart=${encodeURIComponent(JSON.stringify(cart))}`;
-    });
-
-    loadRestaurantMenu();
+    document.getElementById('cartCount').onclick = () => {
+      document.getElementById('cartDrawer').classList.remove('hidden');
+    };
   </script>
 </body>
 </html>
