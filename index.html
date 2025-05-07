@@ -26,26 +26,37 @@
       font-size: 14px;
       z-index: 1000;
     }
-    /* Spinner Styles */
-    .spinner {
-      border: 4px solid #f3f3f3; /* Light gray */
-      border-top: 4px solid #3498db; /* Blue */
-      border-radius: 50%;
-      width: 40px;
-      height: 40px;
-      animation: spin 2s linear infinite;
-      margin: 0 auto;
-    }
+    /* Make sure the spinner is centered and only visible when needed */
+.spinner {
+  position: fixed; /* Keep the spinner fixed while loading */
+  top: 50%; /* Center vertically */
+  left: 50%; /* Center horizontally */
+  transform: translate(-50%, -50%); /* Adjust for exact center */
+  display: flex; /* To center the SVG inside */
+  justify-content: center;
+  align-items: center;
+  z-index: 9999; /* Ensure it's above other content */
+}
 
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
+/* Hidden class to keep spinner invisible by default */
+.hidden {
+  display: none;
+}
 
-    /* Hide spinner while restaurants are loaded */
-    .hidden {
-      display: none;
-    }
+/* Optional: Add animation if you want a nice smooth transition */
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
   </style>
 </head>
 <body class="bg-gray-100">
@@ -122,8 +133,17 @@
   <section class="container mx-auto my-6 px-4">
     <h2 class="text-xl font-semibold text-gray-800 mb-4">Restaurants</h2>
 
-    <!-- Spinner (Initially Visible) -->
-    <div id="spinner" class="spinner hidden"></div>
+ <!-- Spinner (Initially Visible) -->
+<div id="spinner" class="spinner hidden">
+  <svg class="animate-spin h-10 w-10 text-orange-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+    <path class="opacity-75" fill="currentColor"
+          d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+  </svg>
+</div>
+
+
+
 
     <div id="restaurantMenuList" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
       <!-- Restaurant Cards will go here -->
@@ -186,7 +206,9 @@
     let allRestaurants = [];
     let cartItems = 0; // Initialize cart count
 
-   function createCategoryButtons() {
+ let activeCategory = "All"; // Default active category
+
+function createCategoryButtons() {
   const categoryIcons = {
     "All": "fa-utensils",
     "Hot Deals": "fa-fire",
@@ -202,12 +224,26 @@
     "Kotas": "fa-bread-slice"
   };
 
+  categoryList.innerHTML = ""; // Clear old buttons
+
   categories.forEach(category => {
+    const isActive = category === activeCategory;
+
     const btn = document.createElement('button');
-    btn.className = "flex items-center space-x-2 px-4 py-2 bg-gray-200 rounded-full text-sm text-gray-700 hover:bg-gray-300 transition";
-    
+    btn.className = `
+      flex items-center space-x-2 px-4 py-2 rounded-full text-sm 
+      transition-all duration-300 group
+      ${isActive 
+        ? "bg-orange-500 text-white" 
+        : "bg-gray-200 text-gray-700 hover:bg-orange-100"}
+    `;
+
     const icon = document.createElement('i');
-    icon.className = `fas ${categoryIcons[category] || 'fa-utensils'}`;
+    icon.className = `fas ${categoryIcons[category] || 'fa-utensils'} 
+      ${isActive 
+        ? "text-white" 
+        : "text-orange-400 group-hover:text-orange-600"} 
+      transition-transform duration-300 transform group-hover:scale-110`;
 
     const span = document.createElement('span');
     span.textContent = category;
@@ -215,10 +251,17 @@
     btn.appendChild(icon);
     btn.appendChild(span);
 
-    btn.addEventListener('click', () => filterRestaurants(category));
+    btn.addEventListener('click', () => {
+      activeCategory = category;
+      filterRestaurants(category);
+      createCategoryButtons(); // Rerender to update active state
+    });
+
     categoryList.appendChild(btn);
   });
 }
+
+
 
 
     function renderRestaurants(data) {
@@ -314,6 +357,9 @@
         spinner.classList.add('hidden');  // Hide the spinner once data is loaded
       });
     }
+
+
+
 
   
 
