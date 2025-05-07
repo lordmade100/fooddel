@@ -8,6 +8,8 @@
   <link rel="stylesheet" href="styles.css">
   <!-- Font Awesome CDN for icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+
 
 </head>
 <body class="bg-gray-100 font-sans">
@@ -117,15 +119,15 @@
       });
     }
 
-   function renderCategories(menuItems) {
+  function renderCategories(menuItems) {
   categoriesContainer.innerHTML = '';
 
   const categories = new Set(menuItems.map(([_, item]) => item.category));
 
   // Create "All" button
   const allBtn = document.createElement('button');
-  allBtn.className = 'px-6 py-3 bg-gray-200 rounded-full text-lg font-semibold text-gray-700 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-500 transition duration-300 ease-in-out';
-  allBtn.textContent = 'All';
+  allBtn.className = 'flex items-center px-6 py-3 bg-gray-200 rounded-full text-lg font-semibold text-gray-700 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-500 transition duration-300 ease-in-out';
+  allBtn.innerHTML = '<i class="fas fa-utensils mr-2"></i>All';  // Font Awesome icon for "All"
   allBtn.onclick = () => {
     document.querySelectorAll('#categories button').forEach(btn => btn.classList.remove('bg-orange-500', 'text-white'));
     allBtn.classList.add('bg-orange-500', 'text-white');
@@ -136,16 +138,36 @@
   // Create category buttons
   categories.forEach(category => {
     const btn = document.createElement('button');
-    btn.className = 'px-6 py-3 bg-gray-200 rounded-full text-lg font-semibold text-gray-700 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-500 transition duration-300 ease-in-out';
-    btn.textContent = category;
+    btn.className = 'flex items-center px-6 py-3 bg-gray-200 rounded-full text-lg font-semibold text-gray-700 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-500 transition duration-300 ease-in-out';
+    
+    // Example: Add specific icons for categories
+    let icon = '';
+    switch (category) {
+      case 'Pizza':
+        icon = '<i class="fas fa-pizza-slice mr-2"></i>';
+        break;
+      case 'Burgers':
+        icon = '<i class="fas fa-hamburger mr-2"></i>';
+        break;
+      case 'Sushi':
+        icon = '<i class="fas fa-fish mr-2"></i>';
+        break;
+      default:
+        icon = '<i class="fas fa-utensils mr-2"></i>'; // Default icon
+    }
+    
+    btn.innerHTML = icon + category;
+    
     btn.onclick = () => {
       document.querySelectorAll('#categories button').forEach(b => b.classList.remove('bg-orange-500', 'text-white'));
       btn.classList.add('bg-orange-500', 'text-white');
       renderMenuItems(allMenuItems.filter(([_, item]) => item.category === category));
     };
+    
     categoriesContainer.appendChild(btn);
   });
 }
+
 
 
     function renderMenuItems(items) {
