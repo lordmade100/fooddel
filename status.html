@@ -2,49 +2,38 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Order Status</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Order Status - My Two Minutes Food</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.1.2/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.1.2/firebase-database.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.1.2/firebase-auth.js"></script>
 </head>
-<body class="bg-gray-100">
+<body class="bg-gray-100 font-sans">
 
-  <div class="container mx-auto p-6">
-    <div class="bg-white p-6 rounded-lg shadow-lg">
-      <h1 class="text-2xl font-bold text-center">Order Status</h1>
-      <hr class="mt-4 mb-6"/>
+  <div class="max-w-4xl mx-auto bg-white p-8 rounded-lg shadow-lg mt-6">
+    <h1 class="text-3xl font-bold mb-6 text-orange-600">Order Status</h1>
 
-      <div class="mt-8 bg-gray-100 p-6 rounded-lg shadow">
-        <h2 class="text-xl font-bold">Order Summary</h2>
-        <p><strong>Order ID:</strong> <span id="orderId"></span></p>
-        <p><strong>Total:</strong> R<span id="orderTotal"></span></p>
-        <p><strong>Payment Method:</strong> <span id="orderPaymentMethod"></span></p>
-        <p><strong>Address:</strong> <span id="orderAddress"></span></p>
-        <p><strong>Phone:</strong> <span id="orderPhone"></span></p>
-        <p><strong>Special Instructions:</strong> <span id="orderInstructions"></span></p>
+    <div id="orderDetails" class="mb-6">
+      <div class="text-xl font-semibold mb-4">Order Information</div>
+      <div class="text-lg font-medium" id="orderName"></div>
+      <div class="text-lg font-medium" id="orderAddress"></div>
+      <div class="text-lg font-medium" id="orderPhone"></div>
+      <div class="text-lg font-medium" id="orderPayment"></div>
+      <div class="text-lg font-medium mt-4" id="orderTotal"></div>
+    </div>
 
-        <h3 class="mt-6 font-semibold">Items:</h3>
-        <ul id="orderItems" class="list-disc pl-5 mt-2">
-          <!-- Order items will be dynamically added here -->
-        </ul>
-      </div>
+    <div id="orderTimeline" class="space-y-6">
+      <!-- Timeline events will go here -->
+    </div>
 
-      <div class="mt-8 bg-white p-6 rounded-lg shadow">
-        <h2 class="text-xl font-bold">Current Status</h2>
-        <p id="orderStatus" class="mt-4 text-lg">Loading...</p>
-      </div>
-
-      <div class="mt-8 text-center">
-        <button id="contactDriverBtn" class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-lg hidden">
-          Contact Driver
-        </button>
-      </div>
+    <div class="mt-6">
+      <button id="backToHome" class="bg-orange-500 text-white py-2 px-4 rounded-lg">Back to Home</button>
     </div>
   </div>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.9.3/firebase-app.js";
-    import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/9.9.3/firebase-database.js";
-
+  <script>
+    // Firebase Configuration
     const firebaseConfig = {
       apiKey: "AIzaSyAxBT0oESoL62oz_x_Z8cMtdENWZPx4tMI",
       authDomain: "pinotp-d7ef5.firebaseapp.com",
@@ -55,52 +44,57 @@
       appId: "1:708458917827:web:8b8cc6de6176f936cf9776"
     };
 
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
+    const app = firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const orderId = urlParams.get('orderId');
-    const orderRef = ref(db, `orders/${orderId}`);
+    const orderId = new URLSearchParams(window.location.search).get('orderId'); // Assuming the orderId is passed in the URL
+    const orderRef = db.ref('orders/' + orderId);
 
-    const orderIdElement = document.getElementById('orderId');
-    const orderTotalElement = document.getElementById('orderTotal');
-    const orderPaymentMethodElement = document.getElementById('orderPaymentMethod');
-    const orderItemsElement = document.getElementById('orderItems');
-    const orderStatusElement = document.getElementById('orderStatus');
-    const orderAddressElement = document.getElementById('orderAddress');
-    const orderPhoneElement = document.getElementById('orderPhone');
-    const orderInstructionsElement = document.getElementById('orderInstructions');
-    const contactDriverBtn = document.getElementById('contactDriverBtn');
+    // DOM Elements
+    const orderDetails = document.getElementById('orderDetails');
+    const orderTimeline = document.getElementById('orderTimeline');
+    const orderName = document.getElementById('orderName');
+    const orderAddress = document.getElementById('orderAddress');
+    const orderPhone = document.getElementById('orderPhone');
+    const orderPayment = document.getElementById('orderPayment');
+    const orderTotal = document.getElementById('orderTotal');
+    const backToHome = document.getElementById('backToHome');
 
-    onValue(orderRef, (snapshot) => {
-      const order = snapshot.val();
-      if (order) {
-        orderIdElement.textContent = orderId;
-        orderTotalElement.textContent = order.total;
-        orderPaymentMethodElement.textContent = order.paymentMethod;
-        orderAddressElement.textContent = order.address;
-        orderPhoneElement.textContent = order.phone;
-        orderInstructionsElement.textContent = order.instructions || "No special instructions.";
+    // Fetch order details from Firebase
+    orderRef.once('value', (snapshot) => {
+      const orderData = snapshot.val();
+      if (orderData) {
+        // Display Order Info
+        orderName.textContent = `Name: ${orderData.name}`;
+        orderAddress.textContent = `Address: ${orderData.address}`;
+        orderPhone.textContent = `Phone: ${orderData.phone}`;
+        orderPayment.textContent = `Payment Method: ${orderData.paymentMethod}`;
+        orderTotal.textContent = `Total: R${orderData.total.toFixed(2)}`;
 
-        orderItemsElement.innerHTML = '';
-        if (Array.isArray(order.cart)) {
-          order.cart.forEach(item => {
-            const li = document.createElement('li');
-            li.textContent = `${item.name} x${item.quantity} - R${(item.price * item.quantity).toFixed(2)}`;
-            orderItemsElement.appendChild(li);
+        // Display Order Timeline
+        if (orderData.orderUpdates) {
+          Object.keys(orderData.orderUpdates).forEach((updateId) => {
+            const update = orderData.orderUpdates[updateId];
+            const timelineItem = document.createElement('div');
+            timelineItem.className = 'p-4 bg-gray-50 border rounded-lg';
+
+            const time = new Date(update.timestamp).toLocaleString();
+            timelineItem.innerHTML = `
+              <div class="font-semibold">${update.status}</div>
+              <div class="text-gray-500 text-sm">${time}</div>
+              <div class="mt-2">${update.description}</div>
+            `;
+            orderTimeline.appendChild(timelineItem);
           });
         }
-
-        orderStatusElement.textContent = `Status: ${order.status}`;
-
-        if (order.status === 'Out for Delivery') {
-          contactDriverBtn.classList.remove('hidden');
-        }
-      } else {
-        orderStatusElement.textContent = 'Order not found.';
       }
     });
+
+    // Back to Home button
+    backToHome.addEventListener('click', () => {
+      window.location.href = 'index.html'; // Adjust this based on where you want to go
+    });
   </script>
+
 </body>
 </html>
-
